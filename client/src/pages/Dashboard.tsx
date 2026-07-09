@@ -311,6 +311,36 @@ export default function Dashboard() {
         </Card>
       )}
 
+      {/* Meus Documentos (Técnico/Especialista) */}
+      {!isAdmin && documents && documents.length > 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base font-semibold flex items-center gap-2"><FileText className="h-4 w-4 text-indigo-600" /> Meus Documentos</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => setLocation("/documentos")} className="text-primary">
+              Ver todos <ArrowRight className="ml-1 h-3 w-3" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {documents.slice(0, 8).map((doc: any) => (
+                <div key={doc.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
+                    <FileText className="h-4 w-4 text-indigo-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{doc.title || doc.fileName || "Documento"}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{doc.category}</p>
+                  </div>
+                  {doc.fileUrl && (
+                    <a href={doc.fileUrl} target="_blank" rel="noopener" className="text-xs text-blue-600 hover:underline shrink-0">Baixar</a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Histórico de Alterações */}
       {auditLog && auditLog.length > 0 && (
         <Card className="border-0 shadow-sm">

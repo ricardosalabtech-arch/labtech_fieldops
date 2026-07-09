@@ -129,3 +129,9 @@
 - [x] Garantir que documentos anexados pelo admin sejam visíveis para técnico/especialista
 - [ ] Adicionar seção "Meus Documentos" na view do técnico/especialista
 - [x] Testes vitest para login com senha e visibilidade de documentos
+
+## Fase 15: Meus Documentos e Kanban
+- [x] Adicionar seção "Meus Documentos" no Dashboard para técnicos/especialistas
+- [x] Adicionar view Kanban no Agendamentos (quadro de cartões por status)
+- [x] Permitir alternar entre Calendário e Kanban no Agendamentos
+- [x] Testes vitest para as novas views

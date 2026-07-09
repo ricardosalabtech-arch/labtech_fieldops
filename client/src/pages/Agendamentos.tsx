@@ -29,7 +29,7 @@ export default function Agendamentos() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<"month" | "week">("month");
+  const [view, setView] = useState<"month" | "week" | "kanban">("month");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterPeriod, setFilterPeriod] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -292,20 +292,80 @@ export default function Agendamentos() {
             onClick={() => setView("week")}
             className={`px-3 py-1 text-sm rounded-md transition-all ${view === "week" ? "bg-white shadow-sm font-medium" : "text-muted-foreground"}`}
           >Semana</button>
+          <button
+            onClick={() => setView("kanban")}
+            className={`px-3 py-1 text-sm rounded-md transition-all ${view === "kanban" ? "bg-white shadow-sm font-medium" : "text-muted-foreground"}`}
+          >Kanban</button>
         </div>
       </div>
 
-      {/* Calendar */}
+      {/* Calendar / Kanban */}
       {filteredVisits.length === 0 && !visits?.length ? (
         <Card className="border-0 shadow-sm">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <CalendarIcon className="h-12 w-12 text-muted-foreground/30 mb-3" />
             <p className="text-muted-foreground font-medium">Nenhuma visita encontrada</p>
-            <Button onClick={() => openNewVisit()} className="mt-4 gap-2 rounded-lg">
+            {isAdmin && <Button onClick={() => openNewVisit()} className="mt-4 gap-2 rounded-lg">
               <Plus className="h-4 w-4" /> Agendar primeira visita
-            </Button>
+            </Button>}
           </CardContent>
         </Card>
+      ) : view === "kanban" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Object.entries(statusConfig).map(([key, sc]) => {
+            const colVisits = filteredVisits.filter(v => v.status === key);
+            return (
+              <div key={key} className="rounded-xl bg-muted/30 p-3 min-h-[300px]">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${sc.dot}`} />
+                    <span className="text-sm font-semibold">{sc.label}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full">{colVisits.length}</span>
+                </div>
+                <div className="space-y-2">
+                  {colVisits.map(v => (
+                    <div
+                      key={v.id}
+                      className={`p-3 rounded-lg bg-card border ${sc.color} cursor-pointer hover:shadow-md transition-shadow`}
+                      onClick={() => openEditVisit(v)}
+                    >
+                      <div className="font-medium text-sm truncate">{v.clientName}</div>
+                      <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />{v.city}
+                      </div>
+                      <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
+                        <CalendarIcon className="h-3 w-3" />{format(new Date(v.visitDate), "dd/MM/yyyy")}
+                      </div>
+                      {v.scheduledTime && (
+                        <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />{v.scheduledTime}
+                        </div>
+                      )}
+                      {v.employeeName && (
+                        <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
+                          <User className="h-3 w-3" />{v.employeeName}
+                        </div>
+                      )}
+                      {v.visitType && (
+                        <div className="mt-1.5">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted/60 text-muted-foreground capitalize">
+                            {v.visitType.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {colVisits.length === 0 && (
+                    <div className="text-center py-8 text-xs text-muted-foreground/50">
+                      Sem visitas
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       ) : (
         <Card className="border-0 shadow-sm overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
