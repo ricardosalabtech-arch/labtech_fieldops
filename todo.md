@@ -127,7 +127,7 @@
 - [x] Adicionar upload de foto no formulário de funcionário em Configurações
 - [x] Exibir foto do especialista/técnico nos cards de funcionários
 - [x] Garantir que documentos anexados pelo admin sejam visíveis para técnico/especialista
-- [ ] Adicionar seção "Meus Documentos" na view do técnico/especialista
+- [x] Adicionar seção "Meus Documentos" na view do técnico/especialista (implementado no Dashboard na Fase 15)
 - [x] Testes vitest para login com senha e visibilidade de documentos
 
 ## Fase 15: Meus Documentos e Kanban
