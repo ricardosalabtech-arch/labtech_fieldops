@@ -69,7 +69,7 @@ export const visits = mysqlTable("visits", {
   employeeId: int("employeeId"),
   employeeName: varchar("employeeName", { length: 255 }),
   status: mysqlEnum("status", ["agendado", "em_andamento", "concluido", "cancelado"]).default("agendado").notNull(),
-  transportMode: mysqlEnum("transportMode", ["carro_empresa", "transporte_publico", "app"]),
+  transportMode: mysqlEnum("transportMode", ["carro_empresa", "transporte_publico", "app", "aviao"]),
   description: text("description"),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -85,7 +85,7 @@ export const trips = mysqlTable("trips", {
   visitId: int("visitId"),
   employeeId: int("employeeId"),
   employeeName: varchar("employeeName", { length: 255 }),
-  transportMode: mysqlEnum("transportMode", ["carro_empresa", "transporte_publico", "app"]).default("carro_empresa").notNull(),
+  transportMode: mysqlEnum("transportMode", ["carro_empresa", "transporte_publico", "app", "aviao"]).default("carro_empresa").notNull(),
   vehicleInfo: varchar("vehicleInfo", { length: 255 }),
   departureDate: timestamp("departureDate").notNull(),
   returnDate: timestamp("returnDate"),
@@ -123,7 +123,7 @@ export type InsertHotelReservation = typeof hotelReservations.$inferInsert;
 // ─── Documentos ─────────────────────────────────────────────
 export const documents = mysqlTable("documents", {
   id: int("id").autoincrement().primaryKey(),
-  category: mysqlEnum("category", ["veiculo", "condutor", "voucher", "visita", "cliente"]).notNull(),
+  category: mysqlEnum("category", ["veiculo", "condutor", "voucher", "passagem", "visita", "cliente"]).notNull(),
   refId: int("refId"),
   name: varchar("name", { length: 255 }).notNull(),
   fileUrl: text("fileUrl").notNull(),
@@ -196,3 +196,34 @@ export const expenses = mysqlTable("expenses", {
 
 export type Expense = typeof expenses.$inferSelect;
 export type InsertExpense = typeof expenses.$inferInsert;
+
+// ─── Passagens de Avião (Voo) ───────────────────────────────
+export const flightBookings = mysqlTable("flightBookings", {
+  id: int("id").autoincrement().primaryKey(),
+  tripId: int("tripId"),
+  visitId: int("visitId"),
+  employeeId: int("employeeId"),
+  employeeName: varchar("employeeName", { length: 255 }),
+  airline: varchar("airline", { length: 255 }).notNull(),
+  flightNumber: varchar("flightNumber", { length: 50 }).notNull(),
+  originAirport: varchar("originAirport", { length: 10 }).notNull(),
+  destinationAirport: varchar("destinationAirport", { length: 10 }).notNull(),
+  originCity: varchar("originCity", { length: 120 }),
+  destinationCity: varchar("destinationCity", { length: 120 }),
+  departureDateTime: timestamp("departureDateTime").notNull(),
+  arrivalDateTime: timestamp("arrivalDateTime"),
+  seat: varchar("seat", { length: 10 }),
+  gate: varchar("gate", { length: 10 }),
+  bookingCode: varchar("bookingCode", { length: 50 }),
+  passengerName: varchar("passengerName", { length: 255 }),
+  value: decimal("value", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  voucherUrl: text("voucherUrl"),
+  voucherKey: text("voucherKey"),
+  status: mysqlEnum("status", ["confirmada", "pendente", "cancelada"]).default("pendente").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FlightBooking = typeof flightBookings.$inferSelect;
+export type InsertFlightBooking = typeof flightBookings.$inferInsert;

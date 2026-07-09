@@ -156,7 +156,7 @@ export const appRouter = router({
       employeeId: z.number().optional(),
       employeeName: z.string().optional(),
       status: z.enum(["agendado", "em_andamento", "concluido", "cancelado"]).default("agendado"),
-      transportMode: z.enum(["carro_empresa", "transporte_publico", "app"]).optional(),
+      transportMode: z.enum(["carro_empresa", "transporte_publico", "app", "aviao"]).optional(),
       description: z.string().optional(),
       notes: z.string().optional(),
     })).mutation(async ({ input }) => {
@@ -177,7 +177,7 @@ export const appRouter = router({
       employeeId: z.number().optional(),
       employeeName: z.string().optional(),
       status: z.enum(["agendado", "em_andamento", "concluido", "cancelado"]).optional(),
-      transportMode: z.enum(["carro_empresa", "transporte_publico", "app"]).optional(),
+      transportMode: z.enum(["carro_empresa", "transporte_publico", "app", "aviao"]).optional(),
       description: z.string().optional(),
       notes: z.string().optional(),
     })).mutation(async ({ input }) => {
@@ -206,7 +206,7 @@ export const appRouter = router({
       visitId: z.number().optional(),
       employeeId: z.number().optional(),
       employeeName: z.string().optional(),
-      transportMode: z.enum(["carro_empresa", "transporte_publico", "app"]).default("carro_empresa"),
+      transportMode: z.enum(["carro_empresa", "transporte_publico", "app", "aviao"]).default("carro_empresa"),
       vehicleInfo: z.string().optional(),
       departureDate: z.number(),
       returnDate: z.number().optional(),
@@ -225,7 +225,7 @@ export const appRouter = router({
       visitId: z.number().optional(),
       employeeId: z.number().optional(),
       employeeName: z.string().optional(),
-      transportMode: z.enum(["carro_empresa", "transporte_publico", "app"]).optional(),
+      transportMode: z.enum(["carro_empresa", "transporte_publico", "app", "aviao"]).optional(),
       vehicleInfo: z.string().optional(),
       departureDate: z.number().optional(),
       returnDate: z.number().optional(),
@@ -303,7 +303,7 @@ export const appRouter = router({
       return db.getDocuments(input?.category);
     }),
     create: protectedProcedure.input(z.object({
-      category: z.enum(["veiculo", "condutor", "voucher", "visita", "cliente"]),
+      category: z.enum(["veiculo", "condutor", "voucher", "passagem", "visita", "cliente"]),
       refId: z.number().optional(),
       name: z.string().min(1),
       fileUrl: z.string().min(1),
@@ -459,6 +459,78 @@ export const appRouter = router({
     }),
     delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await db.deleteExpense(input.id);
+      return { success: true };
+    }),
+  }),
+
+  // ─── Flight Bookings (Passagens de Avião) ──────────────────
+  flightBookings: router({
+    list: protectedProcedure.input(z.object({
+      status: z.string().optional(),
+      tripId: z.number().optional(),
+      visitId: z.number().optional(),
+    }).optional()).query(async ({ input }) => {
+      const filters: any = {};
+      if (input?.status) filters.status = input.status;
+      if (input?.tripId) filters.tripId = input.tripId;
+      if (input?.visitId) filters.visitId = input.visitId;
+      return db.getFlightBookings(filters);
+    }),
+    create: protectedProcedure.input(z.object({
+      tripId: z.number().optional(),
+      visitId: z.number().optional(),
+      employeeId: z.number().optional(),
+      employeeName: z.string().optional(),
+      airline: z.string().min(1),
+      flightNumber: z.string().min(1),
+      originAirport: z.string().min(1),
+      destinationAirport: z.string().min(1),
+      originCity: z.string().optional(),
+      destinationCity: z.string().optional(),
+      departureDateTime: z.number(),
+      arrivalDateTime: z.number().optional(),
+      seat: z.string().optional(),
+      gate: z.string().optional(),
+      bookingCode: z.string().optional(),
+      passengerName: z.string().optional(),
+      value: z.string().default("0.00"),
+      voucherUrl: z.string().optional(),
+      voucherKey: z.string().optional(),
+      status: z.enum(["confirmada", "pendente", "cancelada"]).default("pendente"),
+      notes: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      const data: any = { ...input };
+      data.departureDateTime = new Date(input.departureDateTime);
+      if (input.arrivalDateTime) data.arrivalDateTime = new Date(input.arrivalDateTime);
+      return db.createFlightBooking(data);
+    }),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      airline: z.string().optional(),
+      flightNumber: z.string().optional(),
+      originAirport: z.string().optional(),
+      destinationAirport: z.string().optional(),
+      originCity: z.string().optional(),
+      destinationCity: z.string().optional(),
+      departureDateTime: z.number().optional(),
+      arrivalDateTime: z.number().optional(),
+      seat: z.string().optional(),
+      gate: z.string().optional(),
+      bookingCode: z.string().optional(),
+      passengerName: z.string().optional(),
+      value: z.string().optional(),
+      voucherUrl: z.string().optional(),
+      voucherKey: z.string().optional(),
+      status: z.enum(["confirmada", "pendente", "cancelada"]).optional(),
+      notes: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      const { id, ...data }: any = input;
+      if (input.departureDateTime) data.departureDateTime = new Date(input.departureDateTime);
+      if (input.arrivalDateTime) data.arrivalDateTime = new Date(input.arrivalDateTime);
+      return db.updateFlightBooking(id, data);
+    }),
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+      await db.deleteFlightBooking(input.id);
       return { success: true };
     }),
   }),

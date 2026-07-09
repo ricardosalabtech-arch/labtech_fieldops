@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, MapPin, Clock, User } from "lucide-react";
+import WazeLink from "@/components/WazeLink";
+import WeatherWidget from "@/components/WeatherWidget";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, addDays, addMonths, isSameDay, isSameMonth, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -394,9 +396,15 @@ export default function Agendamentos() {
                   <SelectItem value="carro_empresa">Carro da Empresa</SelectItem>
                   <SelectItem value="transporte_publico">Transporte Público</SelectItem>
                   <SelectItem value="app">Aplicativo</SelectItem>
+                  <SelectItem value="aviao">Avião</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {form.city && (
+              <div className="col-span-2">
+                <WeatherWidget city={form.city} date={form.visitDate ? new Date(form.visitDate) : undefined} compact={false} />
+              </div>
+            )}
             <div className="col-span-2">
               <Label>Descrição</Label>
               <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Descrição da visita técnica" rows={3} />
@@ -406,6 +414,11 @@ export default function Agendamentos() {
               <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Notas adicionais" rows={2} />
             </div>
           </div>
+          {form.address && form.city && (
+            <div className="flex items-center gap-2 pt-2 border-t">
+              <WazeLink address={form.address} city={form.city} label="Abrir endereço no Waze" />
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleSubmit} disabled={createVisit.isPending || updateVisit.isPending}>

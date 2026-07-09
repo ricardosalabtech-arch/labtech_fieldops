@@ -38,4 +38,26 @@
 ## Fase 5: Testes e Entrega
 - [x] Escrever testes vitest para procedures principais (8 testes, todos passando)
 - [x] Verificar status do projeto
-- [ ] Salvar checkpoint e entregar ao usuário
+- [x] Salvar checkpoint e entregar ao usuário
+
+## Fase 6: Melhorias — Viagem de Avião, Voucher de Voo e Hospedagem
+- [ ] Adicionar "avião" como meio de transporte no schema (visits, trips)
+- [ ] Criar tabela flightBookings para dados de voo (companhia, número, origem, destino, embarque, desembarque, assento, voucher)
+- [ ] Adicionar categoria "passagem" no enum de documents
+- [ ] Atualizar routers tRPC com novos campos e procedures de flightBookings
+- [ ] Atualizar página Viagens com formulário de avião e adicionar hospedagem inline
+- [ ] Atualizar página Reservas para permitir adicionar a partir de viagem
+- [ ] Atualizar página Documentos com tab de Passagens/Vouchers de Voo
+- [ ] Gerar e aplicar migration SQL
+- [ ] Testes vitest para novos fluxos
+
+## Fase 7: Melhorias Adicionais — Waze, Clima e UX
+- [ ] Criar componente WazeLink para navegação (botão abre Waze com endereço)
+- [ ] Criar componente WeatherWidget para exibir temperatura do destino
+- [ ] Atualizar página Viagens com formulário de avião e hospedagem inline
+- [ ] Adicionar badges de transporte (ícones: carro, bus, app, avião)
+- [ ] Atualizar página Agendamentos com link Waze e clima
+- [ ] Atualizar página Reservas com adicionar a partir de viagem
+- [ ] Atualizar página Documentos com tab Passagens de Voo
+- [ ] Atualizar Dashboard com indicadores de voos e clima
+- [ ] Testes vitest para flightBookings

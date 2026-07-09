@@ -11,6 +11,7 @@ import {
   InsertVehicle, vehicles,
   InsertDriver, drivers,
   InsertExpense, expenses,
+  InsertFlightBooking, flightBookings,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -438,4 +439,40 @@ export async function getReportData(startDate: Date, endDate: Date) {
     .orderBy(desc(trips.departureDate));
 
   return { visits: reportVisits, expenses: reportExpenses, trips: reportTrips };
+}
+
+// ─── Flight Bookings (Passagens de Avião) ────────────────────
+export async function getFlightBookings(filters?: { status?: string; tripId?: number; visitId?: number }) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [];
+  if (filters?.status) conditions.push(eq(flightBookings.status, filters.status as any));
+  if (filters?.tripId) conditions.push(eq(flightBookings.tripId, filters.tripId));
+  if (filters?.visitId) conditions.push(eq(flightBookings.visitId, filters.visitId));
+  if (conditions.length > 0) {
+    return db.select().from(flightBookings).where(and(...conditions)).orderBy(desc(flightBookings.departureDateTime));
+  }
+  return db.select().from(flightBookings).orderBy(desc(flightBookings.departureDateTime));
+}
+
+export async function createFlightBooking(data: InsertFlightBooking) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(flightBookings).values(data);
+  const result = await db.select().from(flightBookings).orderBy(desc(flightBookings.id)).limit(1);
+  return result[0];
+}
+
+export async function updateFlightBooking(id: number, data: Partial<InsertFlightBooking>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(flightBookings).set(data).where(eq(flightBookings.id, id));
+  const result = await db.select().from(flightBookings).where(eq(flightBookings.id, id)).limit(1);
+  return result[0];
+}
+
+export async function deleteFlightBooking(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(flightBookings).where(eq(flightBookings.id, id));
 }

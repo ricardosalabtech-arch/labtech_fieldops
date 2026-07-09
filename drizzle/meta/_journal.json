@@ -22,6 +22,13 @@
       "when": 1783562330406,
       "tag": "0002_chilly_arclight",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1783563389091,
+      "tag": "0003_far_micromacro",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BedDouble, Plus, MapPin, Calendar, Trash2, Pencil, DollarSign } from "lucide-react";
+import WazeLink from "@/components/WazeLink";
+import WeatherWidget from "@/components/WeatherWidget";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -148,7 +150,9 @@ export default function Reservas() {
                     {r.confirmationNumber && <p className="text-xs">Confirmação: {r.confirmationNumber}</p>}
                     <div className="flex items-center gap-1.5 font-medium text-foreground"><DollarSign className="h-3.5 w-3.5" />R$ {Number(r.value).toFixed(2)}</div>
                   </div>
+                  {r.city && <WeatherWidget city={r.city} compact />}
                   <div className="flex gap-2 pt-2 border-t">
+                    <WazeLink address={r.hotelName} city={r.city} />
                     <Button variant="ghost" size="sm" onClick={() => openEdit(r)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
                     <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover reserva?")) deleteRes.mutate({ id: r.id }); }} className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>
                   </div>

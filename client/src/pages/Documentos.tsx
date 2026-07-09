@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FolderOpen, Plus, Car, User, FileText, Trash2, Pencil, FileCheck } from "lucide-react";
+import { FolderOpen, Plus, Car, User, FileText, Trash2, Pencil, FileCheck, Plane } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -105,19 +105,22 @@ export default function Documentos() {
   }
 
   const voucherDocs = documents?.filter(d => d.category === "voucher") || [];
+  const passagemDocs = documents?.filter(d => d.category === "passagem") || [];
+  const { data: flights } = trpc.flightBookings.list.useQuery();
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-[oklch(0.22_0.02_250)]">Documentos</h1>
-        <p className="text-sm text-muted-foreground">Veículos, Condutores e Vouchers</p>
+        <p className="text-sm text-muted-foreground">Veículos, Condutores, Vouchers e Passagens</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-lg grid-cols-4">
           <TabsTrigger value="veiculos" className="gap-1.5"><Car className="h-4 w-4" /> Veículos</TabsTrigger>
           <TabsTrigger value="condutores" className="gap-1.5"><User className="h-4 w-4" /> Condutores</TabsTrigger>
           <TabsTrigger value="vouchers" className="gap-1.5"><FileText className="h-4 w-4" /> Vouchers</TabsTrigger>
+          <TabsTrigger value="passagens" className="gap-1.5"><Plane className="h-4 w-4" /> Passagens</TabsTrigger>
         </TabsList>
 
         {/* Veículos */}
@@ -218,6 +221,45 @@ export default function Documentos() {
                   <CardContent>
                     <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Abrir documento</a>
                     <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover documento?")) deleteDoc.mutate({ id: d.id }); }} className="gap-1 text-xs text-destructive ml-2"><Trash2 className="h-3 w-3" /></Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Passagens de Voo */}
+        <TabsContent value="passagens" className="space-y-4">
+          {!flights || flights.length === 0 ? (
+            <Card className="border-0 shadow-sm"><CardContent className="flex flex-col items-center py-12">
+              <Plane className="h-10 w-10 text-muted-foreground/30 mb-2" />
+              <p className="text-muted-foreground text-sm">Nenhuma passagem cadastrada</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">As passagens são adicionadas nas Viagens</p>
+            </CardContent></Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {flights.map(f => (
+                <Card key={f.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center"><Plane className="h-5 w-5 text-indigo-600" /></div>
+                      <div>
+                        <CardTitle className="text-sm font-semibold">{f.airline} · {f.flightNumber}</CardTitle>
+                        <p className="text-xs text-muted-foreground">{f.originAirport} → {f.destinationAirport}</p>
+                      </div>
+                    </div>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${f.status === "confirmada" ? "bg-green-100 text-green-700" : f.status === "cancelada" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
+                      {f.status === "confirmada" ? "Confirmada" : f.status === "cancelada" ? "Cancelada" : "Pendente"}
+                    </span>
+                  </CardHeader>
+                  <CardContent className="space-y-1 text-sm text-muted-foreground">
+                    <p>Partida: {format(new Date(f.departureDateTime), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
+                    {f.arrivalDateTime && <p>Chegada: {format(new Date(f.arrivalDateTime), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>}
+                    {f.passengerName && <p>Passageiro: {f.passengerName}</p>}
+                    {f.seat && <p>Assento: {f.seat}</p>}
+                    {f.bookingCode && <p>Código: {f.bookingCode}</p>}
+                    <div className="flex items-center gap-1.5 font-medium text-foreground pt-1">R$ {Number(f.value).toFixed(2)}</div>
+                    {f.voucherUrl && <a href={f.voucherUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block pt-1">Ver voucher do voo</a>}
                   </CardContent>
                 </Card>
               ))}
