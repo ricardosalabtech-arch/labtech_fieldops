@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Settings, User, Plus, Pencil, Trash2, ShieldCheck, Users, Camera } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import EmptyState from "@/components/EmptyState";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -23,7 +26,7 @@ export default function Configuracoes() {
   const [editingEmp, setEditingEmp] = useState<any>(null);
 
   const utils = trpc.useUtils();
-  const { data: employees } = trpc.employees.list.useQuery();
+  const { data: employees, isLoading: empLoading } = trpc.employees.list.useQuery();
 
   const createEmp = trpc.employees.create.useMutation({
     onSuccess: () => { utils.employees.list.invalidate(); toast.success("Funcionário cadastrado!"); setEmpDialogOpen(false); resetEmpForm(); },
@@ -140,11 +143,10 @@ export default function Configuracoes() {
                 <Plus className="h-4 w-4" /> Novo Funcionário
               </Button>
             </div>
-            {!employees || employees.length === 0 ? (
-              <Card className="border-0 shadow-sm"><CardContent className="flex flex-col items-center py-12">
-                <Users className="h-10 w-10 text-muted-foreground/30 mb-2" />
-                <p className="text-muted-foreground text-sm">Nenhum funcionário cadastrado</p>
-              </CardContent></Card>
+            {empLoading ? (
+              <LoadingSkeleton count={3} type="card" />
+            ) : !employees || employees.length === 0 ? (
+              <EmptyState icon={Users} title="Nenhum funcionário cadastrado" description="Adicione técnicos e especialistas para gerenciar a equipe." action={<Button onClick={() => { resetEmpForm(); setEmpDialogOpen(true); }} className="gap-2 rounded-lg"><Plus className="h-4 w-4" /> Novo Funcionário</Button>} />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {employees.map(e => (
@@ -176,7 +178,12 @@ export default function Configuracoes() {
                       {e.hireDate && <p>Admissão: {format(new Date(e.hireDate), "dd/MM/yyyy", { locale: ptBR })}</p>}
                       <div className="flex gap-2 pt-2 border-t">
                         <Button variant="ghost" size="sm" onClick={() => openEditEmp(e)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
-                        <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover funcionário?")) deleteEmp.mutate({ id: e.id }); }} className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>
+                        <ConfirmDialog
+                          trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>}
+                          title="Remover Funcionário"
+                          description={`Tem certeza que deseja remover ${e.name}? Esta ação não pode ser desfeita.`}
+                          onConfirm={() => deleteEmp.mutate({ id: e.id })}
+                        />
                       </div>
                     </CardContent>
                   </Card>

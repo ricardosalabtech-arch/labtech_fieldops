@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, MapPin, Clock, User, Bell, FileCheck, Paperclip, ListChecks, Wrench, Plus, Trash2 } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import EmptyState from "@/components/EmptyState";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import WazeLink from "@/components/WazeLink";
 import WeatherWidget from "@/components/WeatherWidget";
@@ -91,7 +94,7 @@ export default function Agendamentos() {
   };
 
   const utils = trpc.useUtils();
-  const { data: visits } = trpc.visits.list.useQuery({
+  const { data: visits, isLoading: visitsLoading } = trpc.visits.list.useQuery({
     status: filterStatus !== "all" ? filterStatus : undefined,
   });
   const { data: clients } = trpc.clients.list.useQuery();
@@ -300,16 +303,15 @@ export default function Agendamentos() {
       </div>
 
       {/* Calendar / Kanban */}
-      {filteredVisits.length === 0 && !visits?.length ? (
-        <Card className="border-0 shadow-sm">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <CalendarIcon className="h-12 w-12 text-muted-foreground/30 mb-3" />
-            <p className="text-muted-foreground font-medium">Nenhuma visita encontrada</p>
-            {isAdmin && <Button onClick={() => openNewVisit()} className="mt-4 gap-2 rounded-lg">
-              <Plus className="h-4 w-4" /> Agendar primeira visita
-            </Button>}
-          </CardContent>
-        </Card>
+      {visitsLoading ? (
+        <LoadingSkeleton count={3} type="card" />
+      ) : filteredVisits.length === 0 && !visits?.length ? (
+        <EmptyState
+          icon={CalendarIcon}
+          title="Nenhuma visita encontrada"
+          description="Agende a primeira visita técnica para visualizá-la aqui."
+          action={isAdmin ? <Button onClick={() => openNewVisit()} className="gap-2 rounded-lg"><Plus className="h-4 w-4" /> Agendar primeira visita</Button> : undefined}
+        />
       ) : view === "kanban" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(statusConfig).map(([key, sc]) => {
@@ -620,7 +622,12 @@ export default function Agendamentos() {
                       <div key={cl.id} className="rounded-lg border p-2">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium">{cl.title}</span>
-                          <Button size="sm" variant="ghost" onClick={() => { deleteChecklist.mutate(cl.id); toast.success("Checklist removido"); }}><Trash2 className="h-3 w-3 text-red-500" /></Button>
+                          <ConfirmDialog
+                            trigger={<Button size="sm" variant="ghost"><Trash2 className="h-3 w-3 text-red-500" /></Button>}
+                            title="Remover Checklist"
+                            description="Tem certeza que deseja remover este checklist?"
+                            onConfirm={() => { deleteChecklist.mutate(cl.id); toast.success("Checklist removido"); }}
+                          />
                         </div>
                         {items.map((item, idx) => (
                           <label key={idx} className="flex items-center gap-2 py-0.5 cursor-pointer">
@@ -633,7 +640,7 @@ export default function Agendamentos() {
                   })}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground">Nenhum checklist criado para esta visita.</p>
+                <p className="text-xs text-muted-foreground">Nenhum checklist criado. Adicione um título acima para começar.</p>
               )}
             </div>
           )}
@@ -664,7 +671,12 @@ export default function Agendamentos() {
                           <SelectItem value="permaneceu">Permaneceu</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button size="sm" variant="ghost" onClick={() => { deleteEquipment.mutate(eq.id); toast.success("Equipamento removido"); }}><Trash2 className="h-3 w-3 text-red-500" /></Button>
+                      <ConfirmDialog
+                        trigger={<Button size="sm" variant="ghost"><Trash2 className="h-3 w-3 text-red-500" /></Button>}
+                        title="Remover Equipamento"
+                        description="Tem certeza que deseja remover este equipamento da visita?"
+                        onConfirm={() => { deleteEquipment.mutate(eq.id); toast.success("Equipamento removido"); }}
+                      />
                     </div>
                   ))}
                 </div>

@@ -137,13 +137,13 @@
 - [x] Testes vitest para as novas views
 
 ## Fase 16: Polimento Geral
-- [ ] Salvar checkpoint intermediário (Meus Documentos + Kanban)
-- [ ] Adicionar confirmação de exclusão (AlertDialog) em todas as operações de delete
+- [x] Salvar checkpoint intermediário (Meus Documentos + Kanban)
+- [x] Adicionar confirmação de exclusão (AlertDialog) em todas as operações de delete
 - [ ] Melhorar responsividade mobile (sidebar colapsável, tabelas com scroll horizontal)
-- [ ] Adicionar estados de carregamento (skeletons/spinners) em todas as páginas
+- [x] Adicionar estados de carregamento (skeletons/spinners) em todas as páginas
 - [ ] Validar formulários com mensagens de erro claras
-- [ ] Melhorar Dashboard com skeletons durante carregamento
-- [ ] Adicionar empty states com ilustrações em todas as listas
+- [x] Melhorar Dashboard com skeletons durante carregamento
+- [x] Adicionar empty states com ilustrações em todas as listas
 - [ ] Melhorar acessibilidade (aria-labels, focus rings, navegação por teclado)
 - [ ] Otimizar performance (useMemo em listas grandes, debounce em buscas)
-- [ ] Testes vitest para os novos componentes de UI
+- [x] Testes vitest para os novos componentes de UI (35 testes passando)

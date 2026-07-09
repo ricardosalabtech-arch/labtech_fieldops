@@ -13,6 +13,9 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import TransportBadge from "@/components/TransportBadge";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import EmptyState from "@/components/EmptyState";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 import WazeLink from "@/components/WazeLink";
 import WeatherWidget from "@/components/WeatherWidget";
 import FileUpload from "@/components/FileUpload";
@@ -46,7 +49,7 @@ export default function Viagens() {
   const [flightForTrip, setFlightForTrip] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
-  const { data: trips } = trpc.trips.list.useQuery();
+  const { data: trips, isLoading: tripsLoading } = trpc.trips.list.useQuery();
   const { data: visits } = trpc.visits.list.useQuery();
   const { data: employees } = trpc.employees.list.useQuery();
   const { data: hotelReservations } = trpc.hotelReservations.list.useQuery();
@@ -216,14 +219,12 @@ export default function Viagens() {
         </Button>
       </div>
 
-      {!trips || trips.length === 0 ? (
+      {tripsLoading ? (
+        <LoadingSkeleton type="list" count={3} />
+      ) : !trips || trips.length === 0 ? (
         <Card className="border-0 shadow-sm">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <Car className="h-12 w-12 text-muted-foreground/30 mb-3" />
-            <p className="text-muted-foreground font-medium">Nenhuma viagem cadastrada</p>
-            <Button onClick={openNew} className="mt-4 gap-2 rounded-lg">
-              <Plus className="h-4 w-4" /> Criar primeira viagem
-            </Button>
+          <CardContent>
+            <EmptyState icon={Car} title="Nenhuma viagem cadastrada" description="Crie a primeira viagem para seus técnicos e especialistas." action={<Button onClick={openNew} className="gap-2 rounded-lg"><Plus className="h-4 w-4" /> Criar primeira viagem</Button>} />
           </CardContent>
         </Card>
       ) : (
@@ -265,7 +266,7 @@ export default function Viagens() {
                       <TransportBadge mode={t.transportMode} />
                       {visit && <WazeLink address={visit.address} city={visit.city} />}
                       <Button variant="ghost" size="sm" onClick={() => openEdit(t)} className="h-7 w-7 p-0"><Pencil className="h-3.5 w-3.5" /></Button>
-                      {isAdmin && <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover viagem?")) deleteTrip.mutate({ id: t.id }); }} className="h-7 w-7 p-0 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>}
+                      {isAdmin && <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>} title="Remover viagem?" description={`Remover a viagem de ${t.employeeName || "sem responsável"}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteTrip.mutate({ id: t.id })} />}
                     </div>
                   </div>
 
@@ -312,7 +313,7 @@ export default function Viagens() {
                                       </span>
                                       {f.voucherUrl && <a href={f.voucherUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1"><FileCheck className="h-3 w-3" /> Voucher</a>}
                                       <FileUpload category="passagem" refId={f.id} label="Anexar voucher" accept=".pdf,.jpg,.jpeg,.png" onUploaded={(doc) => { updateFlightVoucher.mutate({ id: f.id, voucherUrl: doc.fileUrl }); }} />
-                                      <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover passagem?")) deleteFlight.mutate({ id: f.id }); }} className="h-6 w-6 p-0 text-destructive"><Trash2 className="h-3 w-3" /></Button>
+                                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover passagem?" description={`Remover passagem ${f.airline} ${f.flightNumber}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteFlight.mutate({ id: f.id })} />
                                     </div>
                                   </div>
                                 ))}

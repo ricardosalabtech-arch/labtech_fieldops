@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, CheckCircle2, Clock, DollarSign, Building2, BedDouble, Plus, ArrowRight, Plane, Search, FileText } from "lucide-react";
@@ -17,7 +18,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const { data: stats, isLoading } = trpc.dashboard.stats.useQuery();
-  const { data: visits } = trpc.visits.list.useQuery({ status: "agendado" });
+  const { data: visits, isLoading: visitsLoading } = trpc.visits.list.useQuery({ status: "agendado" });
   const { data: allVisits } = trpc.visits.list.useQuery();
   const { data: clients } = trpc.clients.list.useQuery();
   const { data: trips } = trpc.trips.list.useQuery();
@@ -161,7 +162,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-[oklch(0.22_0.02_250)]">
-                {isLoading ? "—" : card.value}
+                {isLoading ? <Skeleton className="h-7 w-12" /> : card.value}
               </div>
             </CardContent>
           </Card>
@@ -247,7 +248,20 @@ export default function Dashboard() {
           </Button>
         </CardHeader>
         <CardContent>
-          {!visits || visits.length === 0 ? (
+          {visitsLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
+                  <Skeleton className="w-10 h-10 rounded-lg" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ))}
+            </div>
+          ) : !visits || visits.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Calendar className="h-10 w-10 mx-auto mb-2 opacity-30" />
               <p className="text-sm">Nenhuma visita agendada</p>

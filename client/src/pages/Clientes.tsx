@@ -11,6 +11,9 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/_core/hooks/useAuth";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import EmptyState from "@/components/EmptyState";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 export default function Clientes() {
   const { user } = useAuth();
@@ -22,7 +25,7 @@ export default function Clientes() {
   const [historyClient, setHistoryClient] = useState<any>(null);
 
   const utils = trpc.useUtils();
-  const { data: clients } = trpc.clients.list.useQuery({ search: search || undefined });
+  const { data: clients, isLoading } = trpc.clients.list.useQuery({ search: search || undefined });
   const { data: history } = trpc.clients.history.useQuery({ id: historyClient?.id ?? 0 }, { enabled: !!historyClient });
 
   const createClient = trpc.clients.create.useMutation({
@@ -96,14 +99,17 @@ export default function Clientes() {
         />
       </div>
 
-      {!clients || clients.length === 0 ? (
+      {isLoading ? (
+        <LoadingSkeleton type="card" count={3} />
+      ) : !clients || clients.length === 0 ? (
         <Card className="border-0 shadow-sm">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <Building2 className="h-12 w-12 text-muted-foreground/30 mb-3" />
-            <p className="text-muted-foreground font-medium">Nenhum cliente cadastrado</p>
-            <Button onClick={openNew} className="mt-4 gap-2 rounded-lg">
-              <Plus className="h-4 w-4" /> Cadastrar primeiro cliente
-            </Button>
+          <CardContent>
+            <EmptyState
+              icon={Building2}
+              title="Nenhum cliente cadastrado"
+              description="Cadastre seus clientes para começar a agendar visitas técnicas."
+              action={isAdmin ? <Button onClick={openNew} className="gap-2 rounded-lg"><Plus className="h-4 w-4" /> Cadastrar primeiro cliente</Button> : undefined}
+            />
           </CardContent>
         </Card>
       ) : (
@@ -140,9 +146,12 @@ export default function Clientes() {
                     </Button>
                   )}
                   {isAdmin && (
-                    <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover este cliente?")) deleteClient.mutate({ id: c.id }); }} className="gap-1 text-xs text-destructive">
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    <ConfirmDialog
+                      trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>}
+                      title="Remover cliente?"
+                      description={`Tem certeza que deseja remover ${c.companyName}? Esta ação não pode ser desfeita.`}
+                      onConfirm={() => deleteClient.mutate({ id: c.id })}
+                    />
                   )}
                 </div>
               </CardContent>

@@ -11,6 +11,9 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import FileUpload from "@/components/FileUpload";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import EmptyState from "@/components/EmptyState";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 export default function Documentos() {
   const [activeTab, setActiveTab] = useState("veiculos");
@@ -20,9 +23,9 @@ export default function Documentos() {
   const [editingDriver, setEditingDriver] = useState<any>(null);
 
   const utils = trpc.useUtils();
-  const { data: vehicles } = trpc.vehicles.list.useQuery();
-  const { data: drivers } = trpc.drivers.list.useQuery();
-  const { data: documents } = trpc.documents.list.useQuery();
+  const { data: vehicles, isLoading: vehiclesLoading } = trpc.vehicles.list.useQuery();
+  const { data: drivers, isLoading: driversLoading } = trpc.drivers.list.useQuery();
+  const { data: documents, isLoading: docsLoading } = trpc.documents.list.useQuery();
 
   // Vehicles
   const createVehicle = trpc.vehicles.create.useMutation({
@@ -122,7 +125,7 @@ export default function Documentos() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-lg grid-cols-4">
+        <TabsList className="grid w-full max-w-lg grid-cols-4 overflow-x-auto">
           <TabsTrigger value="veiculos" className="gap-1.5"><Car className="h-4 w-4" /> Veículos</TabsTrigger>
           <TabsTrigger value="condutores" className="gap-1.5"><User className="h-4 w-4" /> Condutores</TabsTrigger>
           <TabsTrigger value="vouchers" className="gap-1.5"><FileText className="h-4 w-4" /> Vouchers</TabsTrigger>
@@ -136,10 +139,11 @@ export default function Documentos() {
               <Plus className="h-4 w-4" /> Novo Veículo
             </Button>
           </div>
-          {!vehicles || vehicles.length === 0 ? (
-            <Card className="border-0 shadow-sm"><CardContent className="flex flex-col items-center py-12">
-              <Car className="h-10 w-10 text-muted-foreground/30 mb-2" />
-              <p className="text-muted-foreground text-sm">Nenhum veículo cadastrado</p>
+          {vehiclesLoading ? (
+            <LoadingSkeleton type="card" count={3} />
+          ) : !vehicles || vehicles.length === 0 ? (
+            <Card className="border-0 shadow-sm"><CardContent>
+              <EmptyState icon={Car} title="Nenhum veículo cadastrado" description="Cadastre veículos para uso nas viagens técnicas." />
             </CardContent></Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -158,7 +162,7 @@ export default function Documentos() {
                     {v.insuranceExpiry && <p className={new Date(v.insuranceExpiry) < new Date() ? "text-red-600 font-medium" : ""}>Seguro: {format(new Date(v.insuranceExpiry), "dd/MM/yyyy", { locale: ptBR })}</p>}
                     <div className="flex gap-2 pt-2 border-t">
                       <Button variant="ghost" size="sm" onClick={() => openEditVehicle(v)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
-                      <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover veículo?")) deleteVehicle.mutate({ id: v.id }); }} className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>
+                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover veículo?" description={`Remover ${v.model} (${v.plate})? Esta ação não pode ser desfeita.`} onConfirm={() => deleteVehicle.mutate({ id: v.id })} />
                     </div>
                   </CardContent>
                 </Card>
@@ -174,10 +178,11 @@ export default function Documentos() {
               <Plus className="h-4 w-4" /> Novo Condutor
             </Button>
           </div>
-          {!drivers || drivers.length === 0 ? (
-            <Card className="border-0 shadow-sm"><CardContent className="flex flex-col items-center py-12">
-              <User className="h-10 w-10 text-muted-foreground/30 mb-2" />
-              <p className="text-muted-foreground text-sm">Nenhum condutor cadastrado</p>
+          {driversLoading ? (
+            <LoadingSkeleton type="card" count={3} />
+          ) : !drivers || drivers.length === 0 ? (
+            <Card className="border-0 shadow-sm"><CardContent>
+              <EmptyState icon={User} title="Nenhum condutor cadastrado" description="Cadastre condutores para uso nas viagens técnicas." />
             </CardContent></Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -197,7 +202,7 @@ export default function Documentos() {
                     {d.email && <p>{d.email}</p>}
                     <div className="flex gap-2 pt-2 border-t">
                       <Button variant="ghost" size="sm" onClick={() => openEditDriver(d)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
-                      <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover condutor?")) deleteDriver.mutate({ id: d.id }); }} className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>
+                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover condutor?" description={`Remover ${d.fullName}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDriver.mutate({ id: d.id })} />
                     </div>
                   </CardContent>
                 </Card>
@@ -216,11 +221,11 @@ export default function Documentos() {
               </div>
             </CardContent>
           </Card>
-          {!voucherDocs.length ? (
-            <Card className="border-0 shadow-sm"><CardContent className="flex flex-col items-center py-12">
-              <FileText className="h-10 w-10 text-muted-foreground/30 mb-2" />
-              <p className="text-muted-foreground text-sm">Nenhum voucher cadastrado</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Use o campo acima para anexar vouchers de hotel</p>
+          {docsLoading ? (
+            <LoadingSkeleton type="card" count={2} />
+          ) : !voucherDocs.length ? (
+            <Card className="border-0 shadow-sm"><CardContent>
+              <EmptyState icon={FileText} title="Nenhum voucher cadastrado" description="Use o campo acima para anexar vouchers de hotel." />
             </CardContent></Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -234,7 +239,7 @@ export default function Documentos() {
                   </CardHeader>
                   <CardContent>
                     <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Abrir documento</a>
-                    <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover documento?")) deleteDoc.mutate({ id: d.id }); }} className="gap-1 text-xs text-destructive ml-2"><Trash2 className="h-3 w-3" /></Button>
+                    <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive ml-2"><Trash2 className="h-3 w-3" /></Button>} title="Remover documento?" description={`Remover ${d.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: d.id })} />
                   </CardContent>
                 </Card>
               ))}
@@ -253,10 +258,8 @@ export default function Documentos() {
             </CardContent>
           </Card>
           {!flights || flights.length === 0 ? (
-            <Card className="border-0 shadow-sm"><CardContent className="flex flex-col items-center py-12">
-              <Plane className="h-10 w-10 text-muted-foreground/30 mb-2" />
-              <p className="text-muted-foreground text-sm">Nenhuma passagem cadastrada</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">As passagens são adicionadas nas Viagens. Use o campo acima para anexar vouchers.</p>
+            <Card className="border-0 shadow-sm"><CardContent>
+              <EmptyState icon={Plane} title="Nenhuma passagem cadastrada" description="As passagens são adicionadas nas Viagens. Use o campo acima para anexar vouchers." />
             </CardContent></Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -298,7 +301,7 @@ export default function Documentos() {
                         <FileCheck className="h-4 w-4 text-indigo-600" />
                         <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate">{d.name}</a>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover documento?")) deleteDoc.mutate({ id: d.id }); }} className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>
+                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover documento?" description={`Remover ${d.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: d.id })} />
                     </CardContent>
                   </Card>
                 ))}

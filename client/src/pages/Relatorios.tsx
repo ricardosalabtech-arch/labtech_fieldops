@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileText, Calendar, DollarSign, Car, CheckCircle2, Clock, XCircle, TrendingUp } from "lucide-react";
+import { FileText, Calendar, DollarSign, Car, CheckCircle2, TrendingUp } from "lucide-react";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
+import EmptyState from "@/components/EmptyState";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -62,7 +64,7 @@ export default function Relatorios() {
       </Card>
 
       {isLoading ? (
-        <Card className="border-0 shadow-sm"><CardContent className="py-12 text-center text-muted-foreground">Carregando relatório...</CardContent></Card>
+        <LoadingSkeleton count={4} type="card" />
       ) : report ? (
         <>
           {/* Cards de Resumo */}
@@ -102,7 +104,7 @@ export default function Relatorios() {
             <CardHeader><CardTitle className="text-base font-semibold">Visitas no Período</CardTitle></CardHeader>
             <CardContent>
               {!report.visits?.length ? (
-                <p className="text-center py-6 text-muted-foreground text-sm">Nenhuma visita no período</p>
+                <EmptyState icon={Calendar} title="Nenhuma visita no período" description="Ajuste o intervalo de datas e gere o relatório novamente." />
               ) : (
                 <div className="space-y-2">
                   {report.visits.map((v: any) => {
@@ -136,7 +138,7 @@ export default function Relatorios() {
             </CardHeader>
             <CardContent>
               {!report.expenses?.length ? (
-                <p className="text-center py-6 text-muted-foreground text-sm">Nenhuma despesa no período</p>
+                <EmptyState icon={DollarSign} title="Nenhuma despesa no período" description="Não há despesas registradas para o intervalo selecionado." />
               ) : (
                 <div className="space-y-2">
                   {report.expenses.map((e: any) => (

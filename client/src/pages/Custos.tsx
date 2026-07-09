@@ -11,6 +11,9 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import FileUpload from "@/components/FileUpload";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import EmptyState from "@/components/EmptyState";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 const categoryConfig = {
@@ -39,7 +42,7 @@ export default function Custos() {
   const [filterEmployee, setFilterEmployee] = useState("all");
 
   const utils = trpc.useUtils();
-  const { data: expenses } = trpc.expenses.list.useQuery({
+  const { data: expenses, isLoading: expensesLoading } = trpc.expenses.list.useQuery({
     status: filterStatus !== "all" ? filterStatus : undefined,
     employeeId: filterEmployee !== "all" ? parseInt(filterEmployee) : undefined,
   });
@@ -164,10 +167,11 @@ export default function Custos() {
       )}
 
       {/* Lista de Despesas */}
-      {!expenses || expenses.length === 0 ? (
-        <Card className="border-0 shadow-sm"><CardContent className="flex flex-col items-center py-12">
-          <DollarSign className="h-10 w-10 text-muted-foreground/30 mb-2" />
-          <p className="text-muted-foreground text-sm">Nenhuma despesa registrada</p>
+      {expensesLoading ? (
+        <LoadingSkeleton type="list" count={4} />
+      ) : !expenses || expenses.length === 0 ? (
+        <Card className="border-0 shadow-sm"><CardContent>
+          <EmptyState icon={DollarSign} title="Nenhuma despesa registrada" description="Adicione despesas vinculadas às viagens para revisão." />
         </CardContent></Card>
       ) : (
         <Card className="border-0 shadow-sm">
@@ -208,9 +212,7 @@ export default function Custos() {
                           </>
                         )}
                         {isAdmin && (
-                          <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover despesa?")) deleteExpense.mutate({ id: e.id }); }} className="text-destructive">
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover despesa?" description={`Remover despesa de R$ ${Number(e.amount).toFixed(2)}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteExpense.mutate({ id: e.id })} />
                         )}
                       </div>
                     </div>

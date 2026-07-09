@@ -11,6 +11,9 @@ import { BedDouble, Plus, MapPin, Calendar, Trash2, Pencil, DollarSign, FileChec
 import WazeLink from "@/components/WazeLink";
 import WeatherWidget from "@/components/WeatherWidget";
 import FileUpload from "@/components/FileUpload";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import EmptyState from "@/components/EmptyState";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -27,7 +30,7 @@ export default function Reservas() {
   const [filterStatus, setFilterStatus] = useState("all");
 
   const utils = trpc.useUtils();
-  const { data: reservations } = trpc.hotelReservations.list.useQuery({ status: filterStatus !== "all" ? filterStatus : undefined });
+  const { data: reservations, isLoading: reservationsLoading } = trpc.hotelReservations.list.useQuery({ status: filterStatus !== "all" ? filterStatus : undefined });
   const { data: trips } = trpc.trips.list.useQuery();
   const { data: visits } = trpc.visits.list.useQuery();
 
@@ -116,14 +119,12 @@ export default function Reservas() {
         ))}
       </div>
 
-      {!reservations || reservations.length === 0 ? (
+      {reservationsLoading ? (
+        <LoadingSkeleton type="card" count={3} />
+      ) : !reservations || reservations.length === 0 ? (
         <Card className="border-0 shadow-sm">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <BedDouble className="h-12 w-12 text-muted-foreground/30 mb-3" />
-            <p className="text-muted-foreground font-medium">Nenhuma reserva cadastrada</p>
-            <Button onClick={openNew} className="mt-4 gap-2 rounded-lg">
-              <Plus className="h-4 w-4" /> Criar primeira reserva
-            </Button>
+          <CardContent>
+            <EmptyState icon={BedDouble} title="Nenhuma reserva cadastrada" description="Crie a primeira reserva de hotel para suas viagens." action={<Button onClick={openNew} className="gap-2 rounded-lg"><Plus className="h-4 w-4" /> Criar primeira reserva</Button>} />
           </CardContent>
         </Card>
       ) : (
@@ -171,7 +172,7 @@ export default function Reservas() {
                   <div className="flex gap-2 pt-2">
                     <WazeLink address={r.hotelName} city={r.city} />
                     <Button variant="ghost" size="sm" onClick={() => openEdit(r)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
-                    <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover reserva?")) deleteRes.mutate({ id: r.id }); }} className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>
+                    <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover reserva?" description={`Remover reserva no ${r.hotelName}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteRes.mutate({ id: r.id })} />
                   </div>
                 </CardContent>
               </Card>
