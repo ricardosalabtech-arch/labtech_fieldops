@@ -9,7 +9,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "admin", "tecnico", "especialista"]).default("user").notNull(), // Migration: ALTER TABLE users MODIFY COLUMN role ENUM('user','admin','tecnico','especialista') NOT NULL DEFAULT 'user';
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -78,6 +78,9 @@ export const visits = mysqlTable("visits", {
   clientNotified: int("clientNotified").default(0),
   specialistNotified: int("specialistNotified").default(0),
   technicianNotified: int("technicianNotified").default(0),
+  latitude: varchar("latitude", { length: 32 }),
+  longitude: varchar("longitude", { length: 32 }),
+  geoTimestamp: timestamp("geoTimestamp"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -133,9 +133,8 @@ export const appRouter = router({
       if (input?.status) filters.status = input.status;
       if (input?.startDate) filters.startDate = new Date(input.startDate!);
       if (input?.endDate) filters.endDate = new Date(input.endDate!);
-      // Técnicos só veem suas próprias visitas
-      if (ctx.user.role !== "admin" && ctx.user.name) {
-        // Buscar funcionário pelo nome
+      // Técnicos e especialistas só veem suas próprias visitas
+      if ((ctx.user.role === "tecnico" || ctx.user.role === "especialista" || ctx.user.role === "user") && ctx.user.name) {
         const employees = await db.getEmployees();
         const emp = employees.find(e => e.name === ctx.user.name);
         if (emp) filters.employeeId = emp.id;
@@ -147,7 +146,7 @@ export const appRouter = router({
       if (!visit) throw new TRPCError({ code: "NOT_FOUND", message: "Visita não encontrada" });
       return visit;
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       clientId: z.number().optional(),
       clientName: z.string().min(1),
       address: z.string().min(1),
@@ -214,6 +213,15 @@ export const appRouter = router({
       technicianNotified: z.number().optional(),
     })).mutation(async ({ input, ctx }) => {
       const { id, ...data } = input;
+      // Técnicos/especialistas só podem alterar status e notas
+      if (ctx.user.role !== "admin") {
+        const allowed: any = {};
+        if (data.status) allowed.status = data.status;
+        if (data.notes !== undefined) allowed.notes = data.notes;
+        if (Object.keys(allowed).length === 0) throw new TRPCError({ code: "FORBIDDEN", message: "Técnicos só podem alterar status e notas da visita" });
+        await db.createAuditLog({ entity: "visit", entityId: id, action: "update_status", changedBy: ctx.user.name, changes: JSON.stringify(allowed) });
+        return db.updateVisit(id, allowed as any);
+      }
       if (data.visitDate) data.visitDate = new Date(data.visitDate) as any;
       if (data.endDate) data.endDate = new Date(data.endDate) as any;
       await db.createAuditLog({ entity: "visit", entityId: id, action: "update", changedBy: ctx.user.name, changes: JSON.stringify(data) });
@@ -223,6 +231,19 @@ export const appRouter = router({
       await db.deleteVisit(input.id);
       return { success: true };
     }),
+    saveGeo: protectedProcedure.input(z.object({
+      id: z.number(),
+      latitude: z.string(),
+      longitude: z.string(),
+    })).mutation(async ({ input, ctx }) => {
+      const data: any = {
+        latitude: input.latitude,
+        longitude: input.longitude,
+        geoTimestamp: new Date(),
+      };
+      await db.createAuditLog({ entity: "visit", entityId: input.id, action: "geo_update", changedBy: ctx.user.name, changes: JSON.stringify(data) });
+      return db.updateVisit(input.id, data);
+    }),
   }),
 
   // ─── Trips ─────────────────────────────────────────────────
@@ -230,10 +251,15 @@ export const appRouter = router({
     list: protectedProcedure.input(z.object({
       status: z.string().optional(),
       employeeId: z.number().optional(),
-    }).optional()).query(async ({ input }) => {
+    }).optional()).query(async ({ input, ctx }) => {
       const filters: any = {};
       if (input?.status) filters.status = input.status;
       if (input?.employeeId) filters.employeeId = input.employeeId;
+      if ((ctx.user.role === "tecnico" || ctx.user.role === "especialista" || ctx.user.role === "user") && ctx.user.name) {
+        const employees = await db.getEmployees();
+        const emp = employees.find(e => e.name === ctx.user.name);
+        if (emp) filters.employeeId = emp.id;
+      }
       return db.getTrips(filters);
     }),
     create: protectedProcedure.input(z.object({
@@ -471,12 +497,17 @@ export const appRouter = router({
       employeeId: z.number().optional(),
       tripId: z.number().optional(),
       category: z.string().optional(),
-    }).optional()).query(async ({ input }) => {
+    }).optional()).query(async ({ input, ctx }) => {
       const filters: any = {};
       if (input?.status) filters.status = input.status;
       if (input?.employeeId) filters.employeeId = input.employeeId;
       if (input?.tripId) filters.tripId = input.tripId;
       if (input?.category) filters.category = input.category;
+      if ((ctx.user.role === "tecnico" || ctx.user.role === "especialista" || ctx.user.role === "user") && ctx.user.name) {
+        const employees = await db.getEmployees();
+        const emp = employees.find(e => e.name === ctx.user.name);
+        if (emp) filters.employeeId = emp.id;
+      }
       return db.getExpenses(filters);
     }),
     summary: protectedProcedure.query(async () => {
@@ -508,7 +539,9 @@ export const appRouter = router({
     })).mutation(async ({ input, ctx }) => {
       const { id, ...data } = input;
       const updateData: any = { ...data };
-      if (data.status === "aprovado") {
+      // Aprovação/rejeição restrita a admin
+      if (data.status === "aprovado" || data.status === "rejeitado") {
+        if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Apenas administradores podem aprovar/rejeitar despesas" });
         updateData.approvedBy = ctx.user.name ?? "admin";
         updateData.approvedAt = new Date();
       }

@@ -96,3 +96,19 @@
 - [x] Vincular uploads de voucher às hotelReservations (upload direto no card da reserva)
 - [x] Exibir documentos vinculados nas telas de visita/viagem/cliente para técnico/especialista
 - [x] Implementar envio real de notificações (in-app toast + owner notification) ao agendar visita
+
+## Fase 12: Controle por Perfis (Admin / Técnico / Especialista)
+- [x] Adicionar role "tecnico" e "especialista" ao enum de users no schema
+- [x] Garantir que técnicos vejam apenas suas visitas/viagens/despesas
+- [x] Admin: bloquear criação/edição para técnicos em Clientes, Agendamentos, Configurações
+- [x] Admin: botão "Acionar Técnico" ao agendar visita (notifica técnico designado)
+- [x] Admin: painel de monitoramento de localização do técnico/especialista
+- [x] Admin: aprovação de gastos restrita ao perfil admin
+- [x] Admin: envio/disponibilização de documentos para técnico/especialista
+- [x] Técnico/Especialista: receber e visualizar documentos enviados
+- [x] Técnico/Especialista: organizar viagem (criar/editar viagens e reservas vinculadas)
+- [x] Técnico/Especialista: inserir custos e vincular à viagem em aberto
+- [x] Técnico/Especialista: registrar geolocalização na visita
+- [x] Atualizar DashboardLayout para mostrar navegação condicional por perfil
+- [x] Gerar e aplicar migration SQL
+- [x] Testes vitest para controle de acesso por perfil

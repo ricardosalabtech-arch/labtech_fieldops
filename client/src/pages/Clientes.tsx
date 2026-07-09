@@ -10,8 +10,11 @@ import { Building2, Plus, Search, Pencil, Trash2, Phone, Mail, MapPin, History }
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Clientes() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -76,9 +79,11 @@ export default function Clientes() {
           <h1 className="text-2xl font-bold tracking-tight text-[oklch(0.22_0.02_250)]">Clientes</h1>
           <p className="text-sm text-muted-foreground">{clients?.length ?? 0} cliente(s)</p>
         </div>
-        <Button onClick={openNew} className="gap-2 rounded-lg">
-          <Plus className="h-4 w-4" /> Novo Cliente
-        </Button>
+        {isAdmin && (
+          <Button onClick={openNew} className="gap-2 rounded-lg">
+            <Plus className="h-4 w-4" /> Novo Cliente
+          </Button>
+        )}
       </div>
 
       <div className="relative max-w-md">
@@ -129,12 +134,16 @@ export default function Clientes() {
                   <Button variant="ghost" size="sm" onClick={() => { setHistoryClient(c); setHistoryOpen(true); }} className="gap-1 text-xs">
                     <History className="h-3 w-3" /> Histórico
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => openEdit(c)} className="gap-1 text-xs">
-                    <Pencil className="h-3 w-3" /> Editar
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover este cliente?")) deleteClient.mutate({ id: c.id }); }} className="gap-1 text-xs text-destructive">
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                  {isAdmin && (
+                    <Button variant="ghost" size="sm" onClick={() => openEdit(c)} className="gap-1 text-xs">
+                      <Pencil className="h-3 w-3" /> Editar
+                    </Button>
+                  )}
+                  {isAdmin && (
+                    <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover este cliente?")) deleteClient.mutate({ id: c.id }); }} className="gap-1 text-xs text-destructive">
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

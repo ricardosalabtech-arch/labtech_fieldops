@@ -33,16 +33,16 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: Car, label: "Viagens", path: "/viagens" },
-  { icon: Calendar, label: "Agendamentos", path: "/agendamentos" },
-  { icon: Building2, label: "Clientes", path: "/clientes" },
-  { icon: BedDouble, label: "Reservas Hotel", path: "/reservas" },
-  { icon: FolderOpen, label: "Documentos", path: "/documentos" },
-  { icon: ClipboardCheck, label: "Revisão de Custos", path: "/custos" },
-  { icon: FileText, label: "Relatórios", path: "/relatorios" },
-  { icon: Settings, label: "Configurações", path: "/configuracoes" },
+const allMenuItems = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", roles: ["admin", "tecnico", "especialista", "user"] },
+  { icon: Car, label: "Viagens", path: "/viagens", roles: ["admin", "tecnico", "especialista", "user"] },
+  { icon: Calendar, label: "Agendamentos", path: "/agendamentos", roles: ["admin", "tecnico", "especialista", "user"] },
+  { icon: Building2, label: "Clientes", path: "/clientes", roles: ["admin"] },
+  { icon: BedDouble, label: "Reservas Hotel", path: "/reservas", roles: ["admin", "tecnico", "especialista", "user"] },
+  { icon: FolderOpen, label: "Documentos", path: "/documentos", roles: ["admin", "tecnico", "especialista", "user"] },
+  { icon: ClipboardCheck, label: "Revisão de Custos", path: "/custos", roles: ["admin", "tecnico", "especialista", "user"] },
+  { icon: FileText, label: "Relatórios", path: "/relatorios", roles: ["admin"] },
+  { icon: Settings, label: "Configurações", path: "/configuracoes", roles: ["admin"] },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -134,7 +134,8 @@ function DashboardLayoutContent({
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const activeMenuItem = menuItems.find(item => item.path === location);
+  const menuItems = allMenuItems.filter(item => item.roles.includes(user?.role || "user"));
+  const activeMenuItem = menuItems.find((item: any) => item.path === location);
   const isMobile = useIsMobile();
   const isAdmin = user?.role === "admin";
 
@@ -218,16 +219,16 @@ function DashboardLayoutContent({
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-white/70" />
                   <span className="text-sm text-white/90 font-medium">
-                    {isAdmin ? "Administrador" : "Técnico"}
+                    {isAdmin ? "Administrador" : user?.role === "especialista" ? "Especialista" : user?.role === "tecnico" ? "Técnico" : "Usuário"}
                   </span>
                 </div>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/15 text-white/80 font-medium">
-                  {isAdmin ? "Admin" : "Técnico"}
+                  {isAdmin ? "Admin" : user?.role === "especialista" ? "Especialista" : user?.role === "tecnico" ? "Técnico" : "Usuário"}
                 </span>
               </div>
             )}
             <SidebarMenu className="px-2 py-1 mt-1">
-              {menuItems.map(item => {
+              {menuItems.map((item: any) => {
                 const isActive = location === item.path || (item.path !== "/dashboard" && location.startsWith(item.path));
                 return (
                   <SidebarMenuItem key={item.path}>

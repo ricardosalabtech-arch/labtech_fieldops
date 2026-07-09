@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import FileUpload from "@/components/FileUpload";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const categoryConfig = {
   transporte: { label: "Transporte", color: "bg-blue-100 text-blue-700" },
@@ -26,6 +27,8 @@ const statusConfig = {
 };
 
 export default function Custos() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any>(null);
   const { data: linkedExpenseDocs } = trpc.documents.list.useQuery(
@@ -194,7 +197,7 @@ export default function Custos() {
                         <p className="text-xs text-muted-foreground">{format(new Date(e.createdAt), "dd/MM/yyyy", { locale: ptBR })}</p>
                       </div>
                       <div className="flex gap-1">
-                        {e.status === "pendente" && (
+                        {e.status === "pendente" && isAdmin && (
                           <>
                             <Button variant="ghost" size="sm" onClick={() => updateExpense.mutate({ id: e.id, status: "aprovado" })} className="text-green-600 gap-1 text-xs">
                               <CheckCircle className="h-3 w-3" /> Aprovar
@@ -204,9 +207,11 @@ export default function Custos() {
                             </Button>
                           </>
                         )}
-                        <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover despesa?")) deleteExpense.mutate({ id: e.id }); }} className="text-destructive">
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        {isAdmin && (
+                          <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover despesa?")) deleteExpense.mutate({ id: e.id }); }} className="text-destructive">
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -242,11 +247,11 @@ export default function Custos() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Viagem</Label>
+            <div><Label>Viagem {!isAdmin && <span className="text-xs text-muted-foreground">(em aberto)</span>}</Label>
               <Select value={form.tripId} onValueChange={v => setForm(f => ({ ...f, tripId: v }))}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
-                  {trips?.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.employeeName} — {format(new Date(t.departureDate), "dd/MM/yyyy")}</SelectItem>)}
+                  {trips?.filter(t => isAdmin || t.status === "planejada" || t.status === "em_andamento").map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.employeeName} — {format(new Date(t.departureDate), "dd/MM/yyyy")} ({t.status === "planejada" ? "Planejada" : t.status === "em_andamento" ? "Em Andamento" : t.status})</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

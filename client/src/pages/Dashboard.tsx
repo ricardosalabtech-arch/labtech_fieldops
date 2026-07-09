@@ -10,8 +10,12 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem, CommandEmpty } from "@/components/ui/command";
 import { useState, useMemo } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { MapPin, Navigation } from "lucide-react";
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const { data: stats, isLoading } = trpc.dashboard.stats.useQuery();
   const { data: visits } = trpc.visits.list.useQuery({ status: "agendado" });
   const { data: allVisits } = trpc.visits.list.useQuery();
@@ -280,6 +284,32 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Monitoramento de Localização (Admin) */}
+      {isAdmin && allVisits && allVisits.some((v: any) => v.latitude && v.longitude) && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2"><MapPin className="h-4 w-4 text-blue-600" /> Monitoramento de Localização</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {allVisits.filter((v: any) => v.latitude && v.longitude).slice(0, 10).map((v: any) => (
+                <div key={v.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40">
+                  <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
+                    <Navigation className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{v.clientName}</p>
+                    <p className="text-xs text-muted-foreground">{v.latitude}, {v.longitude}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs text-muted-foreground">{v.geoTimestamp ? format(new Date(v.geoTimestamp), "dd/MM HH:mm", { locale: ptBR }) : ""}</p>
+                    <a href={`https://www.waze.com/ul?ll=${v.latitude},${v.longitude}&navigate=yes`} target="_blank" rel="noopener" className="text-xs text-blue-600 hover:underline">Ver no Waze</a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Histórico de Alterações */}
       {auditLog && auditLog.length > 0 && (

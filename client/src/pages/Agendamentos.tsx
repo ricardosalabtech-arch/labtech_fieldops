@@ -12,6 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import WazeLink from "@/components/WazeLink";
 import WeatherWidget from "@/components/WeatherWidget";
 import FileUpload from "@/components/FileUpload";
+import GeoLocation from "@/components/GeoLocation";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, addDays, addMonths, isSameDay, isSameMonth, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -24,6 +26,8 @@ const statusConfig = {
 };
 
 export default function Agendamentos() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<"month" | "week">("month");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -101,6 +105,10 @@ export default function Agendamentos() {
   const updateVisit = trpc.visits.update.useMutation({
     onSuccess: () => { utils.visits.list.invalidate(); toast.success("Visita atualizada!"); setDialogOpen(false); resetForm(); },
     onError: (e) => toast.error("Erro ao atualizar: " + e.message),
+  });
+  const saveGeo = trpc.visits.saveGeo.useMutation({
+    onSuccess: () => toast.success("Localização registrada com sucesso!"),
+    onError: (e) => toast.error("Erro ao registrar localização: " + e.message),
   });
 
   const [form, setForm] = useState({
@@ -232,9 +240,11 @@ export default function Agendamentos() {
           <h1 className="text-2xl font-bold tracking-tight text-[oklch(0.22_0.02_250)]">Agendamentos</h1>
           <p className="text-sm text-muted-foreground">{filteredVisits.length} visita(s)</p>
         </div>
-        <Button onClick={() => openNewVisit()} className="gap-2 rounded-lg">
-          <Plus className="h-4 w-4" /> Nova Visita
-        </Button>
+        {isAdmin && (
+          <Button onClick={() => openNewVisit()} className="gap-2 rounded-lg">
+            <Plus className="h-4 w-4" /> Nova Visita
+          </Button>
+        )}
       </div>
 
       {/* Filtros */}
@@ -631,11 +641,32 @@ export default function Agendamentos() {
               )}
             </div>
           )}
+          {editingVisit && !isAdmin && (
+            <div className="pt-3 border-t">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Registrar Presença no Local</span>
+              </div>
+              <GeoLocation
+                label="Capturar minha localização"
+                onLocationCapture={(lat, lng) => {
+                  saveGeo.mutate({ id: editingVisit.id, latitude: lat.toString(), longitude: lng.toString() });
+                }}
+              />
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={createVisit.isPending || updateVisit.isPending}>
-              {editingVisit ? "Salvar Alterações" : "Agendar Visita"}
-            </Button>
+            {isAdmin && (
+              <Button onClick={handleSubmit} disabled={createVisit.isPending || updateVisit.isPending}>
+                {editingVisit ? "Salvar Alterações" : "Agendar Visita"}
+              </Button>
+            )}
+            {!isAdmin && editingVisit && (
+              <Button onClick={handleSubmit} disabled={createVisit.isPending || updateVisit.isPending}>
+                Atualizar Status
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

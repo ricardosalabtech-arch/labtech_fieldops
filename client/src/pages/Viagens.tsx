@@ -17,6 +17,7 @@ import WazeLink from "@/components/WazeLink";
 import WeatherWidget from "@/components/WeatherWidget";
 import FileUpload from "@/components/FileUpload";
 import { FileCheck } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const statusConfig = {
   planejada: { label: "Planejada", color: "border-blue-300 text-blue-700", bg: "bg-blue-50", dot: "bg-blue-500" },
@@ -34,6 +35,8 @@ const columns = [
 ];
 
 export default function Viagens() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState<any>(null);
   const [expandedTrip, setExpandedTrip] = useState<number | null>(null);
@@ -262,7 +265,7 @@ export default function Viagens() {
                       <TransportBadge mode={t.transportMode} />
                       {visit && <WazeLink address={visit.address} city={visit.city} />}
                       <Button variant="ghost" size="sm" onClick={() => openEdit(t)} className="h-7 w-7 p-0"><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover viagem?")) deleteTrip.mutate({ id: t.id }); }} className="h-7 w-7 p-0 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
+                      {isAdmin && <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover viagem?")) deleteTrip.mutate({ id: t.id }); }} className="h-7 w-7 p-0 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>}
                     </div>
                   </div>
 
