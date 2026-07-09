@@ -179,7 +179,7 @@ export default function Configuracoes() {
                       <div className="flex gap-2 pt-2 border-t">
                         <Button variant="ghost" size="sm" onClick={() => openEditEmp(e)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
                         <ConfirmDialog
-                          trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>}
+                          trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>}
                           title="Remover Funcionário"
                           description={`Tem certeza que deseja remover ${e.name}? Esta ação não pode ser desfeita.`}
                           onConfirm={() => deleteEmp.mutate({ id: e.id })}
@@ -196,7 +196,7 @@ export default function Configuracoes() {
 
       {/* Dialog Funcionário */}
       <Dialog open={empDialogOpen} onOpenChange={o => { setEmpDialogOpen(o); if (!o) resetEmpForm(); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editingEmp ? "Editar Funcionário" : "Novo Funcionário"}</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-2">
             {/* Photo upload */}

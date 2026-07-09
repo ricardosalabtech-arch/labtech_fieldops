@@ -132,6 +132,10 @@ export default function Viagens() {
 
   function handleSubmit() {
     if (!form.departureDate) { toast.error("Data de saída é obrigatória"); return; }
+    if (!form.transportMode?.trim()) { toast.error("Selecione o meio de transporte"); return; }
+    if (form.returnDate && form.departureDate && new Date(form.returnDate) < new Date(form.departureDate)) {
+      toast.error("Data de retorno deve ser posterior à data de saída"); return;
+    }
     const data: any = {
       visitId: form.visitId ? parseInt(form.visitId) : undefined,
       employeeId: form.employeeId ? parseInt(form.employeeId) : undefined,
@@ -265,8 +269,8 @@ export default function Viagens() {
                     <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                       <TransportBadge mode={t.transportMode} />
                       {visit && <WazeLink address={visit.address} city={visit.city} />}
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(t)} className="h-7 w-7 p-0"><Pencil className="h-3.5 w-3.5" /></Button>
-                      {isAdmin && <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>} title="Remover viagem?" description={`Remover a viagem de ${t.employeeName || "sem responsável"}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteTrip.mutate({ id: t.id })} />}
+                      <Button variant="ghost" size="sm" aria-label="Editar" onClick={() => openEdit(t)} className="h-7 w-7 p-0"><Pencil className="h-3.5 w-3.5" /></Button>
+                      {isAdmin && <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="h-7 w-7 p-0 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>} title="Remover viagem?" description={`Remover a viagem de ${t.employeeName || "sem responsável"}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteTrip.mutate({ id: t.id })} />}
                     </div>
                   </div>
 
@@ -313,7 +317,7 @@ export default function Viagens() {
                                       </span>
                                       {f.voucherUrl && <a href={f.voucherUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1"><FileCheck className="h-3 w-3" /> Voucher</a>}
                                       <FileUpload category="passagem" refId={f.id} label="Anexar voucher" accept=".pdf,.jpg,.jpeg,.png" onUploaded={(doc) => { updateFlightVoucher.mutate({ id: f.id, voucherUrl: doc.fileUrl }); }} />
-                                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover passagem?" description={`Remover passagem ${f.airline} ${f.flightNumber}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteFlight.mutate({ id: f.id })} />
+                                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="h-6 w-6 p-0 text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover passagem?" description={`Remover passagem ${f.airline} ${f.flightNumber}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteFlight.mutate({ id: f.id })} />
                                     </div>
                                   </div>
                                 ))}

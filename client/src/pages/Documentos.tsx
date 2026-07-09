@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FolderOpen, Plus, Car, User, FileText, Trash2, Pencil, FileCheck, Plane, Upload } from "lucide-react";
+import { FolderOpen, Plus, Car, User, FileText, Trash2, Pencil, FileCheck, Plane, Upload, Download } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -112,6 +112,8 @@ export default function Documentos() {
   const passagemDocs = documents?.filter(d => d.category === "passagem") || [];
   const visitaDocs = documents?.filter(d => d.category === "visita") || [];
   const clienteDocs = documents?.filter(d => d.category === "cliente") || [];
+  const veiculoDocs = (vid?: number) => documents?.filter(d => d.category === "veiculo" && d.refId === vid) || [];
+  const condutorDocs = (did?: number) => documents?.filter(d => d.category === "condutor" && d.refId === did) || [];
   const { data: flights } = trpc.flightBookings.list.useQuery();
   const { data: hotelReservations } = trpc.hotelReservations.list.useQuery();
   const { data: visits } = trpc.visits.list.useQuery();
@@ -160,9 +162,26 @@ export default function Documentos() {
                     {v.color && <p>Cor: {v.color}</p>}
                     {v.crlvExpiry && <p className={new Date(v.crlvExpiry) < new Date() ? "text-red-600 font-medium" : ""}>CRLV: {format(new Date(v.crlvExpiry), "dd/MM/yyyy", { locale: ptBR })}</p>}
                     {v.insuranceExpiry && <p className={new Date(v.insuranceExpiry) < new Date() ? "text-red-600 font-medium" : ""}>Seguro: {format(new Date(v.insuranceExpiry), "dd/MM/yyyy", { locale: ptBR })}</p>}
+                    {/* Documentos anexados */}
+                    {veiculoDocs(v.id).length > 0 && (
+                      <div className="space-y-1 pt-2">
+                        <p className="text-xs font-medium text-foreground flex items-center gap-1"><FileCheck className="h-3 w-3" /> Documentos anexados:</p>
+                        {veiculoDocs(v.id).map(doc => (
+                          <div key={doc.id} className="flex items-center gap-1.5">
+                            <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline truncate flex-1">{doc.name}</a>
+                            <a href={doc.fileUrl} download className="text-muted-foreground hover:text-primary" aria-label="Baixar {doc.name}"><Download className="h-3 w-3" /></a>
+                            <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="h-5 w-5 p-0 text-destructive"><Trash2 className="h-2.5 w-2.5" /></Button>} title="Remover documento?" description={`Remover ${doc.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: doc.id })} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Upload de documento */}
+                    <div className="pt-2">
+                      <FileUpload category="veiculo" refId={v.id} label="Anexar CRLV, seguro, etc." accept=".pdf,.jpg,.jpeg,.png" />
+                    </div>
                     <div className="flex gap-2 pt-2 border-t">
                       <Button variant="ghost" size="sm" onClick={() => openEditVehicle(v)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
-                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover veículo?" description={`Remover ${v.model} (${v.plate})? Esta ação não pode ser desfeita.`} onConfirm={() => deleteVehicle.mutate({ id: v.id })} />
+                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover veículo?" description={`Remover ${v.model} (${v.plate})? Esta ação não pode ser desfeita.`} onConfirm={() => deleteVehicle.mutate({ id: v.id })} />
                     </div>
                   </CardContent>
                 </Card>
@@ -200,9 +219,26 @@ export default function Documentos() {
                     {d.cnhExpiry && <p className={new Date(d.cnhExpiry) < new Date() ? "text-red-600 font-medium" : ""}>Validade CNH: {format(new Date(d.cnhExpiry), "dd/MM/yyyy", { locale: ptBR })}</p>}
                     {d.bloodType && <p>Tipo Sanguíneo: {d.bloodType}</p>}
                     {d.email && <p>{d.email}</p>}
+                    {/* Documentos anexados */}
+                    {condutorDocs(d.id).length > 0 && (
+                      <div className="space-y-1 pt-2">
+                        <p className="text-xs font-medium text-foreground flex items-center gap-1"><FileCheck className="h-3 w-3" /> Documentos anexados:</p>
+                        {condutorDocs(d.id).map(doc => (
+                          <div key={doc.id} className="flex items-center gap-1.5">
+                            <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline truncate flex-1">{doc.name}</a>
+                            <a href={doc.fileUrl} download className="text-muted-foreground hover:text-primary" aria-label="Baixar {doc.name}"><Download className="h-3 w-3" /></a>
+                            <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="h-5 w-5 p-0 text-destructive"><Trash2 className="h-2.5 w-2.5" /></Button>} title="Remover documento?" description={`Remover ${doc.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: doc.id })} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Upload de documento */}
+                    <div className="pt-2">
+                      <FileUpload category="condutor" refId={d.id} label="Anexar CNH, exame, etc." accept=".pdf,.jpg,.jpeg,.png" />
+                    </div>
                     <div className="flex gap-2 pt-2 border-t">
                       <Button variant="ghost" size="sm" onClick={() => openEditDriver(d)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
-                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover condutor?" description={`Remover ${d.fullName}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDriver.mutate({ id: d.id })} />
+                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover condutor?" description={`Remover ${d.fullName}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDriver.mutate({ id: d.id })} />
                     </div>
                   </CardContent>
                 </Card>
@@ -239,7 +275,7 @@ export default function Documentos() {
                   </CardHeader>
                   <CardContent>
                     <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Abrir documento</a>
-                    <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive ml-2"><Trash2 className="h-3 w-3" /></Button>} title="Remover documento?" description={`Remover ${d.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: d.id })} />
+                    <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive ml-2"><Trash2 className="h-3 w-3" /></Button>} title="Remover documento?" description={`Remover ${d.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: d.id })} />
                   </CardContent>
                 </Card>
               ))}
@@ -301,7 +337,7 @@ export default function Documentos() {
                         <FileCheck className="h-4 w-4 text-indigo-600" />
                         <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate">{d.name}</a>
                       </div>
-                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover documento?" description={`Remover ${d.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: d.id })} />
+                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover documento?" description={`Remover ${d.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: d.id })} />
                     </CardContent>
                   </Card>
                 ))}

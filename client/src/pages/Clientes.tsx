@@ -1,5 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -19,13 +20,14 @@ export default function Clientes() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [historyClient, setHistoryClient] = useState<any>(null);
 
   const utils = trpc.useUtils();
-  const { data: clients, isLoading } = trpc.clients.list.useQuery({ search: search || undefined });
+  const { data: clients, isLoading } = trpc.clients.list.useQuery({ search: debouncedSearch || undefined });
   const { data: history } = trpc.clients.history.useQuery({ id: historyClient?.id ?? 0 }, { enabled: !!historyClient });
 
   const createClient = trpc.clients.create.useMutation({
@@ -64,8 +66,16 @@ export default function Clientes() {
   }
 
   function handleSubmit() {
-    if (!form.companyName || !form.responsibleName || !form.responsibleEmail) {
-      toast.error("Preencha os campos obrigatórios");
+    if (!form.companyName?.trim()) {
+      toast.error("Nome da empresa é obrigatório");
+      return;
+    }
+    if (!form.responsibleName?.trim()) {
+      toast.error("Nome do responsável é obrigatório");
+      return;
+    }
+    if (!form.responsibleEmail?.trim() || !form.responsibleEmail.includes("@")) {
+      toast.error("E-mail do responsável inválido");
       return;
     }
     if (editingClient) {
@@ -95,6 +105,7 @@ export default function Clientes() {
           placeholder="Buscar por empresa, responsável ou CNPJ..."
           value={search}
           onChange={e => setSearch(e.target.value)}
+          aria-label="Buscar clientes"
           className="pl-9 rounded-lg"
         />
       </div>
@@ -147,7 +158,7 @@ export default function Clientes() {
                   )}
                   {isAdmin && (
                     <ConfirmDialog
-                      trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>}
+                      trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>}
                       title="Remover cliente?"
                       description={`Tem certeza que deseja remover ${c.companyName}? Esta ação não pode ser desfeita.`}
                       onConfirm={() => deleteClient.mutate({ id: c.id })}

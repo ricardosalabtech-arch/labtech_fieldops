@@ -139,11 +139,17 @@
 ## Fase 16: Polimento Geral
 - [x] Salvar checkpoint intermediário (Meus Documentos + Kanban)
 - [x] Adicionar confirmação de exclusão (AlertDialog) em todas as operações de delete
-- [ ] Melhorar responsividade mobile (sidebar colapsável, tabelas com scroll horizontal)
+- [x] Melhorar responsividade mobile (sidebar colapsável, dialogs com overflow-y-auto, grids responsivas)
 - [x] Adicionar estados de carregamento (skeletons/spinners) em todas as páginas
-- [ ] Validar formulários com mensagens de erro claras
+- [x] Validar formulários com mensagens de erro claras (Clientes, Agendamentos, Reservas, Custos)
 - [x] Melhorar Dashboard com skeletons durante carregamento
 - [x] Adicionar empty states com ilustrações em todas as listas
-- [ ] Melhorar acessibilidade (aria-labels, focus rings, navegação por teclado)
-- [ ] Otimizar performance (useMemo em listas grandes, debounce em buscas)
+- [x] Melhorar acessibilidade (aria-labels em botões de editar/excluir, inputs de busca)
+- [x] Otimizar performance (useDebounce em Clientes, useMemo em Dashboard e Agendamentos)
 - [x] Testes vitest para os novos componentes de UI (35 testes passando)
+
+## Fase 17: Anexos em Veículos e Condutores
+- [x] Adicionar campo de upload de documento (CNH, CRLV, seguro) nos cards de veículo
+- [x] Adicionar campo de upload de documento (CNH, exame médico) nos cards de condutor
+- [x] Exibir links de download dos documentos anexados nos cards
+- [x] Permitir visualizar e baixar os documentos anexados

@@ -74,8 +74,12 @@ export default function Reservas() {
   }
 
   function handleSubmit() {
-    if (!form.hotelName || !form.city || !form.checkIn || !form.checkOut) {
-      toast.error("Preencha os campos obrigatórios"); return;
+    if (!form.hotelName?.trim()) { toast.error("Nome do hotel é obrigatório"); return; }
+    if (!form.city?.trim()) { toast.error("Cidade é obrigatória"); return; }
+    if (!form.checkIn) { toast.error("Data de check-in é obrigatória"); return; }
+    if (!form.checkOut) { toast.error("Data de check-out é obrigatória"); return; }
+    if (form.checkIn && form.checkOut && new Date(form.checkOut) <= new Date(form.checkIn)) {
+      toast.error("Data de check-out deve ser posterior ao check-in"); return;
     }
     const data: any = {
       tripId: form.tripId ? parseInt(form.tripId) : undefined,
@@ -171,8 +175,8 @@ export default function Reservas() {
                   </div>
                   <div className="flex gap-2 pt-2">
                     <WazeLink address={r.hotelName} city={r.city} />
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(r)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
-                    <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover reserva?" description={`Remover reserva no ${r.hotelName}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteRes.mutate({ id: r.id })} />
+                    <Button variant="ghost" size="sm" aria-label="Editar" onClick={() => openEdit(r)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
+                    <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover reserva?" description={`Remover reserva no ${r.hotelName}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteRes.mutate({ id: r.id })} />
                   </div>
                 </CardContent>
               </Card>

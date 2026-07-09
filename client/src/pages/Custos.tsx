@@ -51,6 +51,8 @@ export default function Custos() {
   const { data: employees } = trpc.employees.list.useQuery();
   const { data: trips } = trpc.trips.list.useQuery();
   const { data: visits } = trpc.visits.list.useQuery();
+  const { data: allDocs } = trpc.documents.list.useQuery({ category: "despesa" });
+  const expenseDocs = (eid?: number) => allDocs?.filter(d => d.refId === eid) || [];
 
   const createExpense = trpc.expenses.create.useMutation({
     onSuccess: () => { utils.expenses.list.invalidate(); utils.expenses.summary.invalidate(); utils.expenses.byEmployee.invalidate(); toast.success("Despesa registrada!"); setDialogOpen(false); resetForm(); },
@@ -74,7 +76,9 @@ export default function Custos() {
   }
 
   function handleSubmit() {
-    if (!form.amount || parseFloat(form.amount) <= 0) { toast.error("Valor inválido"); return; }
+    if (!form.amount?.trim()) { toast.error("Informe o valor da despesa"); return; }
+    if (parseFloat(form.amount) <= 0) { toast.error("O valor deve ser maior que zero"); return; }
+    if (!form.category?.trim()) { toast.error("Selecione a categoria da despesa"); return; }
     const data: any = {
       tripId: form.tripId ? parseInt(form.tripId) : undefined,
       visitId: form.visitId ? parseInt(form.visitId) : undefined,
@@ -192,7 +196,20 @@ export default function Custos() {
                           <span className={`text-[10px] px-2 py-0.5 rounded-full ${cc.color}`}>{cc.label}</span>
                           <span className={`text-[10px] px-2 py-0.5 rounded-full ${sc.color} flex items-center gap-1`}><sc.icon className="h-2.5 w-2.5" />{sc.label}</span>
                           {e.employeeName && <span className="text-xs text-muted-foreground">· {e.employeeName}</span>}
+                          {expenseDocs(e.id).length > 0 && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 flex items-center gap-1"><FileCheck className="h-2.5 w-2.5" />Recibo</span>
+                          )}
                         </div>
+                        {/* Links de recibos anexados */}
+                        {expenseDocs(e.id).length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {expenseDocs(e.id).map(doc => (
+                              <a key={doc.id} href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                                <Paperclip className="h-2.5 w-2.5" />{doc.name}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -212,7 +229,7 @@ export default function Custos() {
                           </>
                         )}
                         {isAdmin && (
-                          <ConfirmDialog trigger={<Button variant="ghost" size="sm" className="text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover despesa?" description={`Remover despesa de R$ ${Number(e.amount).toFixed(2)}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteExpense.mutate({ id: e.id })} />
+                          <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover despesa?" description={`Remover despesa de R$ ${Number(e.amount).toFixed(2)}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteExpense.mutate({ id: e.id })} />
                         )}
                       </div>
                     </div>
@@ -225,7 +242,7 @@ export default function Custos() {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={o => { setDialogOpen(o); if (!o) resetForm(); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nova Despesa</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-2">
             <div><Label>Categoria</Label>

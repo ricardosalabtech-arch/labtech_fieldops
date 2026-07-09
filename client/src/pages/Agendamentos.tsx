@@ -161,8 +161,20 @@ export default function Agendamentos() {
   }
 
   function handleSubmit() {
-    if (!form.clientName || !form.address || !form.city || !form.visitDate) {
-      toast.error("Preencha os campos obrigatórios");
+    if (!form.clientName?.trim()) {
+      toast.error("Nome do cliente é obrigatório");
+      return;
+    }
+    if (!form.address?.trim()) {
+      toast.error("Endereço da visita é obrigatório");
+      return;
+    }
+    if (!form.city?.trim()) {
+      toast.error("Cidade é obrigatória");
+      return;
+    }
+    if (!form.visitDate) {
+      toast.error("Data da visita é obrigatória");
       return;
     }
     const data: any = {
@@ -623,7 +635,7 @@ export default function Agendamentos() {
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium">{cl.title}</span>
                           <ConfirmDialog
-                            trigger={<Button size="sm" variant="ghost"><Trash2 className="h-3 w-3 text-red-500" /></Button>}
+                            trigger={<Button size="sm" variant="ghost" aria-label="Excluir"><Trash2 className="h-3 w-3 text-red-500" /></Button>}
                             title="Remover Checklist"
                             description="Tem certeza que deseja remover este checklist?"
                             onConfirm={() => { deleteChecklist.mutate(cl.id); toast.success("Checklist removido"); }}
@@ -672,7 +684,7 @@ export default function Agendamentos() {
                         </SelectContent>
                       </Select>
                       <ConfirmDialog
-                        trigger={<Button size="sm" variant="ghost"><Trash2 className="h-3 w-3 text-red-500" /></Button>}
+                        trigger={<Button size="sm" variant="ghost" aria-label="Excluir"><Trash2 className="h-3 w-3 text-red-500" /></Button>}
                         title="Remover Equipamento"
                         description="Tem certeza que deseja remover este equipamento da visita?"
                         onConfirm={() => { deleteEquipment.mutate(eq.id); toast.success("Equipamento removido"); }}
