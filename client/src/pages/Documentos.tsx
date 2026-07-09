@@ -351,6 +351,12 @@ export default function Documentos() {
       <Dialog open={vehicleDialog} onOpenChange={o => { setVehicleDialog(o); if (!o) resetVehicleForm(); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{editingVehicle ? "Editar Veículo" : "Novo Veículo"}</DialogTitle></DialogHeader>
+          {editingVehicle && (
+            <div className="flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-sm text-blue-700">
+              <FileCheck className="h-4 w-4" />
+              <span>Veículo cadastrado! Anexe os documentos abaixo.</span>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4 py-2">
             <div><Label>Placa *</Label><Input value={vForm.plate} onChange={e => setVForm(f => ({ ...f, plate: e.target.value }))} /></div>
             <div><Label>Modelo *</Label><Input value={vForm.model} onChange={e => setVForm(f => ({ ...f, model: e.target.value }))} /></div>
@@ -394,6 +400,12 @@ export default function Documentos() {
       <Dialog open={driverDialog} onOpenChange={o => { setDriverDialog(o); if (!o) resetDriverForm(); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editingDriver ? "Editar Condutor" : "Novo Condutor"}</DialogTitle></DialogHeader>
+          {editingDriver && (
+            <div className="flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-sm text-blue-700">
+              <FileCheck className="h-4 w-4" />
+              <span>Condutor cadastrado! Anexe os documentos abaixo.</span>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4 py-2">
             <div className="col-span-2"><Label>Nome Completo *</Label><Input value={dForm.fullName} onChange={e => setDForm(f => ({ ...f, fullName: e.target.value }))} /></div>
             <div><Label>CPF</Label><Input value={dForm.cpf} onChange={e => setDForm(f => ({ ...f, cpf: e.target.value }))} /></div>
