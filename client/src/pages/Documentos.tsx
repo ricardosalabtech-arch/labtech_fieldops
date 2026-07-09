@@ -6,10 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FolderOpen, Plus, Car, User, FileText, Trash2, Pencil, FileCheck, Plane } from "lucide-react";
+import { FolderOpen, Plus, Car, User, FileText, Trash2, Pencil, FileCheck, Plane, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import FileUpload from "@/components/FileUpload";
 
 export default function Documentos() {
   const [activeTab, setActiveTab] = useState("veiculos");
@@ -106,7 +107,12 @@ export default function Documentos() {
 
   const voucherDocs = documents?.filter(d => d.category === "voucher") || [];
   const passagemDocs = documents?.filter(d => d.category === "passagem") || [];
+  const visitaDocs = documents?.filter(d => d.category === "visita") || [];
+  const clienteDocs = documents?.filter(d => d.category === "cliente") || [];
   const { data: flights } = trpc.flightBookings.list.useQuery();
+  const { data: hotelReservations } = trpc.hotelReservations.list.useQuery();
+  const { data: visits } = trpc.visits.list.useQuery();
+  const { data: clients } = trpc.clients.list.useQuery();
 
   return (
     <div className="space-y-6">
@@ -200,13 +206,21 @@ export default function Documentos() {
           )}
         </TabsContent>
 
-        {/* Vouchers */}
+        {/* Vouchers de Hotel */}
         <TabsContent value="vouchers" className="space-y-4">
+          <Card className="border-0 shadow-sm bg-muted/30">
+            <CardContent className="py-4">
+              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Upload className="h-4 w-4" /> Anexar Voucher de Hotel</h3>
+              <div className="max-w-md">
+                <FileUpload category="voucher" label="Selecionar arquivo do voucher (PDF, imagem)" accept=".pdf,.jpg,.jpeg,.png" />
+              </div>
+            </CardContent>
+          </Card>
           {!voucherDocs.length ? (
             <Card className="border-0 shadow-sm"><CardContent className="flex flex-col items-center py-12">
               <FileText className="h-10 w-10 text-muted-foreground/30 mb-2" />
               <p className="text-muted-foreground text-sm">Nenhum voucher cadastrado</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Os vouchers são vinculados às reservas de hotel</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">Use o campo acima para anexar vouchers de hotel</p>
             </CardContent></Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -230,11 +244,19 @@ export default function Documentos() {
 
         {/* Passagens de Voo */}
         <TabsContent value="passagens" className="space-y-4">
+          <Card className="border-0 shadow-sm bg-muted/30">
+            <CardContent className="py-4">
+              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Upload className="h-4 w-4" /> Anexar Voucher de Passagem Aérea</h3>
+              <div className="max-w-md">
+                <FileUpload category="passagem" label="Selecionar arquivo da passagem (PDF, imagem)" accept=".pdf,.jpg,.jpeg,.png" />
+              </div>
+            </CardContent>
+          </Card>
           {!flights || flights.length === 0 ? (
             <Card className="border-0 shadow-sm"><CardContent className="flex flex-col items-center py-12">
               <Plane className="h-10 w-10 text-muted-foreground/30 mb-2" />
               <p className="text-muted-foreground text-sm">Nenhuma passagem cadastrada</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">As passagens são adicionadas nas Viagens</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">As passagens são adicionadas nas Viagens. Use o campo acima para anexar vouchers.</p>
             </CardContent></Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -263,6 +285,24 @@ export default function Documentos() {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          )}
+          {passagemDocs.length > 0 && (
+            <div className="space-y-2 pt-4 border-t">
+              <h3 className="text-sm font-semibold text-muted-foreground">Documentos de Passagens Anexados</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {passagemDocs.map(d => (
+                  <Card key={d.id} className="border-0 shadow-sm">
+                    <CardContent className="flex items-center justify-between py-3">
+                      <div className="flex items-center gap-2">
+                        <FileCheck className="h-4 w-4 text-indigo-600" />
+                        <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate">{d.name}</a>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover documento?")) deleteDoc.mutate({ id: d.id }); }} className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
         </TabsContent>

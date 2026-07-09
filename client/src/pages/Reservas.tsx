@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BedDouble, Plus, MapPin, Calendar, Trash2, Pencil, DollarSign } from "lucide-react";
+import { BedDouble, Plus, MapPin, Calendar, Trash2, Pencil, DollarSign, FileCheck, Upload } from "lucide-react";
 import WazeLink from "@/components/WazeLink";
 import WeatherWidget from "@/components/WeatherWidget";
+import FileUpload from "@/components/FileUpload";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -151,7 +152,23 @@ export default function Reservas() {
                     <div className="flex items-center gap-1.5 font-medium text-foreground"><DollarSign className="h-3.5 w-3.5" />R$ {Number(r.value).toFixed(2)}</div>
                   </div>
                   {r.city && <WeatherWidget city={r.city} compact />}
-                  <div className="flex gap-2 pt-2 border-t">
+                  {r.voucherUrl && (
+                    <a href={r.voucherUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-teal-600 hover:underline pt-1">
+                      <FileCheck className="h-3.5 w-3.5" /> Ver voucher da reserva
+                    </a>
+                  )}
+                  <div className="pt-2 border-t">
+                    <FileUpload
+                      category="voucher"
+                      refId={r.id}
+                      label="Anexar voucher desta reserva"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onUploaded={(doc) => {
+                        updateRes.mutate({ id: r.id, voucherUrl: doc.fileUrl });
+                      }}
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-2">
                     <WazeLink address={r.hotelName} city={r.city} />
                     <Button variant="ghost" size="sm" onClick={() => openEdit(r)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
                     <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover reserva?")) deleteRes.mutate({ id: r.id }); }} className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>
@@ -199,7 +216,18 @@ export default function Reservas() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-2"><Label>Voucher URL</Label><Input value={form.voucherUrl} onChange={e => setForm(f => ({ ...f, voucherUrl: e.target.value }))} placeholder="URL do voucher" /></div>
+            <div className="col-span-2">
+              <Label>Voucher da Reserva</Label>
+              {form.voucherUrl ? (
+                <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+                  <FileCheck className="h-4 w-4 text-green-600" />
+                  <a href={form.voucherUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-green-700 hover:underline truncate flex-1">Voucher anexado</a>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setForm(f => ({ ...f, voucherUrl: "" }))} className="text-xs text-destructive">Remover</Button>
+                </div>
+              ) : (
+                <FileUpload category="voucher" refId={editing?.id} label="Anexar voucher (PDF, imagem)" accept=".pdf,.jpg,.jpeg,.png" onUploaded={(doc) => setForm(f => ({ ...f, voucherUrl: doc.fileUrl }))} />
+              )}
+            </div>
             <div className="col-span-2"><Label>Observações</Label><Textarea value={form.observations} onChange={e => setForm(f => ({ ...f, observations: e.target.value }))} rows={2} /></div>
           </div>
           <DialogFooter>

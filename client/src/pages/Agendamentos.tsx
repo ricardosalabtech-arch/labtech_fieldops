@@ -7,9 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, MapPin, Clock, User } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, MapPin, Clock, User, Bell } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import WazeLink from "@/components/WazeLink";
 import WeatherWidget from "@/components/WeatherWidget";
+import FileUpload from "@/components/FileUpload";
+import { FileCheck, Paperclip } from "lucide-react";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, addDays, addMonths, isSameDay, isSameMonth, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -29,6 +32,10 @@ export default function Agendamentos() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingVisit, setEditingVisit] = useState<any>(null);
+  const { data: linkedDocs } = trpc.documents.list.useQuery(
+    { category: "visita", refId: editingVisit?.id },
+    { enabled: !!editingVisit?.id }
+  );
 
   const utils = trpc.useUtils();
   const { data: visits } = trpc.visits.list.useQuery({
@@ -36,6 +43,7 @@ export default function Agendamentos() {
   });
   const { data: clients } = trpc.clients.list.useQuery();
   const { data: employees } = trpc.employees.list.useQuery();
+  const { data: trips } = trpc.trips.list.useQuery();
 
   const createVisit = trpc.visits.create.useMutation({
     onSuccess: () => { utils.visits.list.invalidate(); toast.success("Visita agendada com sucesso!"); setDialogOpen(false); resetForm(); },
@@ -48,12 +56,14 @@ export default function Agendamentos() {
 
   const [form, setForm] = useState({
     clientName: "", clientId: "", address: "", city: "", state: "",
-    visitDate: "", scheduledTime: "", employeeId: "", employeeName: "",
+    visitDate: "", endDate: "", scheduledTime: "", visitType: "manutencao_preventiva",
+    employeeId: "", employeeName: "", tripId: "",
     transportMode: "carro_empresa", description: "", notes: "",
+    notifyClient: false, notifySpecialist: false, notifyTechnician: false,
   });
 
   function resetForm() {
-    setForm({ clientName: "", clientId: "", address: "", city: "", state: "", visitDate: "", scheduledTime: "", employeeId: "", employeeName: "", transportMode: "carro_empresa", description: "", notes: "" });
+    setForm({ clientName: "", clientId: "", address: "", city: "", state: "", visitDate: "", endDate: "", scheduledTime: "", visitType: "manutencao_preventiva", employeeId: "", employeeName: "", tripId: "", transportMode: "carro_empresa", description: "", notes: "", notifyClient: false, notifySpecialist: false, notifyTechnician: false });
     setEditingVisit(null);
     setSelectedDate(null);
   }
@@ -74,12 +84,18 @@ export default function Agendamentos() {
       city: visit.city || "",
       state: visit.state || "",
       visitDate: format(new Date(visit.visitDate), "yyyy-MM-dd"),
+      endDate: visit.endDate ? format(new Date(visit.endDate), "yyyy-MM-dd") : "",
       scheduledTime: visit.scheduledTime || "",
+      visitType: visit.visitType || "manutencao_preventiva",
       employeeId: visit.employeeId?.toString() || "",
       employeeName: visit.employeeName || "",
+      tripId: visit.tripId?.toString() || "",
       transportMode: visit.transportMode || "carro_empresa",
       description: visit.description || "",
       notes: visit.notes || "",
+      notifyClient: !!visit.clientNotified,
+      notifySpecialist: !!visit.specialistNotified,
+      notifyTechnician: !!visit.technicianNotified,
     });
     setDialogOpen(true);
   }
@@ -96,12 +112,18 @@ export default function Agendamentos() {
       city: form.city,
       state: form.state || undefined,
       visitDate: new Date(form.visitDate + "T00:00:00").getTime(),
+      endDate: form.endDate ? new Date(form.endDate + "T23:59:59").getTime() : undefined,
       scheduledTime: form.scheduledTime || undefined,
+      visitType: form.visitType,
       employeeId: form.employeeId ? parseInt(form.employeeId) : undefined,
       employeeName: form.employeeName || undefined,
+      tripId: form.tripId ? parseInt(form.tripId) : undefined,
       transportMode: form.transportMode,
       description: form.description || undefined,
       notes: form.notes || undefined,
+      clientNotified: form.notifyClient ? 1 : 0,
+      specialistNotified: form.notifySpecialist ? 1 : 0,
+      technicianNotified: form.notifyTechnician ? 1 : 0,
     };
     if (editingVisit) {
       updateVisit.mutate({ id: editingVisit.id, ...data });
@@ -366,12 +388,28 @@ export default function Agendamentos() {
               <Input value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} placeholder="UF" maxLength={3} />
             </div>
             <div>
-              <Label>Data da Visita *</Label>
+              <Label>Data de Início *</Label>
               <Input type="date" value={form.visitDate} onChange={e => setForm(f => ({ ...f, visitDate: e.target.value }))} />
+            </div>
+            <div>
+              <Label>Data de Término</Label>
+              <Input type="date" value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))} />
             </div>
             <div>
               <Label>Hora Agendada</Label>
               <Input type="time" value={form.scheduledTime} onChange={e => setForm(f => ({ ...f, scheduledTime: e.target.value }))} />
+            </div>
+            <div>
+              <Label>Tipo de Visita</Label>
+              <Select value={form.visitType} onValueChange={v => setForm(f => ({ ...f, visitType: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manutencao_preventiva">Manutenção Preventiva</SelectItem>
+                  <SelectItem value="manutencao_corretiva">Manutenção Corretiva</SelectItem>
+                  <SelectItem value="consultoria">Consultoria</SelectItem>
+                  <SelectItem value="treinamento">Treinamento</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Técnico/Responsável</Label>
@@ -400,11 +438,37 @@ export default function Agendamentos() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="col-span-2">
+              <Label>Viagem Vinculada</Label>
+              <Select value={form.tripId} onValueChange={v => setForm(f => ({ ...f, tripId: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione uma viagem (opcional)" /></SelectTrigger>
+                <SelectContent>
+                  {trips?.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.employeeName} — {format(new Date(t.departureDate), "dd/MM/yyyy")}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             {form.city && (
               <div className="col-span-2">
                 <WeatherWidget city={form.city} date={form.visitDate ? new Date(form.visitDate) : undefined} compact={false} />
               </div>
             )}
+            <div className="col-span-2">
+              <Label className="flex items-center gap-2 mb-2"><Bell className="h-4 w-4" /> Notificar sobre a visita</Label>
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={form.notifyClient} onCheckedChange={(v) => setForm(f => ({ ...f, notifyClient: !!v }))} />
+                  <span className="text-sm">Cliente</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={form.notifySpecialist} onCheckedChange={(v) => setForm(f => ({ ...f, notifySpecialist: !!v }))} />
+                  <span className="text-sm">Especialista</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={form.notifyTechnician} onCheckedChange={(v) => setForm(f => ({ ...f, notifyTechnician: !!v }))} />
+                  <span className="text-sm">Técnico</span>
+                </label>
+              </div>
+            </div>
             <div className="col-span-2">
               <Label>Descrição</Label>
               <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Descrição da visita técnica" rows={3} />
@@ -417,6 +481,34 @@ export default function Agendamentos() {
           {form.address && form.city && (
             <div className="flex items-center gap-2 pt-2 border-t">
               <WazeLink address={form.address} city={form.city} label="Abrir endereço no Waze" />
+            </div>
+          )}
+          {editingVisit && (
+            <div className="pt-3 border-t">
+              <div className="flex items-center gap-2 mb-2">
+                <Paperclip className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Documentos da Visita</span>
+              </div>
+              <FileUpload
+                category="visita"
+                refId={editingVisit.id}
+                label="Anexar documento (manual, ordem de serviço, foto, etc.)"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onUploaded={() => toast.success("Documento anexado à visita")}
+              />
+              {linkedDocs && linkedDocs.length > 0 ? (
+                <div className="space-y-1.5 mt-2">
+                  {linkedDocs.map((d: any) => (
+                    <a key={d.id} href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 hover:bg-green-100 transition-colors">
+                      <FileCheck className="h-4 w-4 text-green-600 shrink-0" />
+                      <span className="text-sm text-green-700 truncate flex-1">{d.name}</span>
+                      <span className="text-xs text-muted-foreground">{d.mimeType}</span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-1">Nenhum documento vinculado a esta visita ainda.</p>
+              )}
             </div>
           )}
           <DialogFooter>

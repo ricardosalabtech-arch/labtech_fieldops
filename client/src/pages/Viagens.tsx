@@ -15,6 +15,8 @@ import { ptBR } from "date-fns/locale";
 import TransportBadge from "@/components/TransportBadge";
 import WazeLink from "@/components/WazeLink";
 import WeatherWidget from "@/components/WeatherWidget";
+import FileUpload from "@/components/FileUpload";
+import { FileCheck } from "lucide-react";
 
 const statusConfig = {
   planejada: { label: "Planejada", color: "border-blue-300 text-blue-700", bg: "bg-blue-50", dot: "bg-blue-500" },
@@ -90,7 +92,7 @@ export default function Viagens() {
     airline: "", flightNumber: "", originAirport: "", destinationAirport: "",
     originCity: "", destinationCity: "", departureDateTime: "", arrivalDateTime: "",
     seat: "", gate: "", bookingCode: "", passengerName: "", value: "0.00",
-    status: "pendente", notes: "",
+    status: "pendente", notes: "", voucherUrl: "",
   });
 
   function resetForm() {
@@ -104,7 +106,7 @@ export default function Viagens() {
   }
 
   function resetFlightForm() {
-    setFlightForm({ airline: "", flightNumber: "", originAirport: "", destinationAirport: "", originCity: "", destinationCity: "", departureDateTime: "", arrivalDateTime: "", seat: "", gate: "", bookingCode: "", passengerName: "", value: "0.00", status: "pendente", notes: "" });
+    setFlightForm({ airline: "", flightNumber: "", originAirport: "", destinationAirport: "", originCity: "", destinationCity: "", departureDateTime: "", arrivalDateTime: "", seat: "", gate: "", bookingCode: "", passengerName: "", value: "0.00", status: "pendente", notes: "", voucherUrl: "" });
     setFlightForTrip(null);
   }
 
@@ -158,6 +160,11 @@ export default function Viagens() {
     });
   }
 
+  const updateFlightVoucher = trpc.flightBookings.update.useMutation({
+    onSuccess: () => { utils.flightBookings.list.invalidate(); toast.success("Voucher do voo anexado!"); },
+    onError: (e: any) => toast.error("Erro ao atualizar voucher: " + e.message),
+  });
+
   function handleFlightSubmit() {
     if (!flightForm.airline || !flightForm.flightNumber || !flightForm.originAirport || !flightForm.destinationAirport || !flightForm.departureDateTime) {
       toast.error("Preencha companhia, voo, aeroportos e data de partida");
@@ -180,6 +187,7 @@ export default function Viagens() {
       value: flightForm.value || "0.00",
       status: flightForm.status as any,
       notes: flightForm.notes || undefined,
+      voucherUrl: flightForm.voucherUrl || undefined,
     });
   }
 
@@ -299,7 +307,8 @@ export default function Viagens() {
                                       <span className={`text-[10px] px-2 py-0.5 rounded-full ${f.status === "confirmada" ? "bg-green-100 text-green-700" : f.status === "cancelada" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
                                         {f.status === "confirmada" ? "Confirmada" : f.status === "cancelada" ? "Cancelada" : "Pendente"}
                                       </span>
-                                      {f.voucherUrl && <a href={f.voucherUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">Voucher</a>}
+                                      {f.voucherUrl && <a href={f.voucherUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1"><FileCheck className="h-3 w-3" /> Voucher</a>}
+                                      <FileUpload category="passagem" refId={f.id} label="Anexar voucher" accept=".pdf,.jpg,.jpeg,.png" onUploaded={(doc) => { updateFlightVoucher.mutate({ id: f.id, voucherUrl: doc.fileUrl }); }} />
                                       <Button variant="ghost" size="sm" onClick={() => { if (confirm("Remover passagem?")) deleteFlight.mutate({ id: f.id }); }} className="h-6 w-6 p-0 text-destructive"><Trash2 className="h-3 w-3" /></Button>
                                     </div>
                                   </div>
@@ -498,6 +507,17 @@ export default function Viagens() {
               </Select>
             </div>
             <div className="col-span-2"><Label>Observações</Label><Textarea value={flightForm.notes} onChange={e => setFlightForm(f => ({ ...f, notes: e.target.value }))} rows={2} /></div>
+            <div className="col-span-2">
+              <Label>Voucher do Voo (Passagem)</Label>
+              <FileUpload category="passagem" label="Anexar voucher da passagem aérea" accept=".pdf,.jpg,.jpeg,.png" onUploaded={(doc) => setFlightForm(f => ({ ...f, voucherUrl: doc.fileUrl }))} />
+              {flightForm.voucherUrl && (
+                <div className="flex items-center gap-2 mt-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+                  <FileCheck className="h-4 w-4 text-green-600" />
+                  <a href={flightForm.voucherUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-green-700 hover:underline truncate flex-1">Voucher anexado</a>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setFlightForm(f => ({ ...f, voucherUrl: "" }))} className="text-xs text-destructive">Remover</Button>
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFlightDialogOpen(false)}>Cancelar</Button>

@@ -65,13 +65,19 @@ export const visits = mysqlTable("visits", {
   city: varchar("city", { length: 120 }).notNull(),
   state: varchar("state", { length: 4 }),
   visitDate: timestamp("visitDate").notNull(),
+  endDate: timestamp("endDate"),
   scheduledTime: varchar("scheduledTime", { length: 10 }),
+  visitType: mysqlEnum("visitType", ["manutencao_preventiva", "manutencao_corretiva", "consultoria", "treinamento"]).default("manutencao_preventiva").notNull(),
   employeeId: int("employeeId"),
   employeeName: varchar("employeeName", { length: 255 }),
+  tripId: int("tripId"),
   status: mysqlEnum("status", ["agendado", "em_andamento", "concluido", "cancelado"]).default("agendado").notNull(),
   transportMode: mysqlEnum("transportMode", ["carro_empresa", "transporte_publico", "app", "aviao"]),
   description: text("description"),
   notes: text("notes"),
+  clientNotified: int("clientNotified").default(0),
+  specialistNotified: int("specialistNotified").default(0),
+  technicianNotified: int("technicianNotified").default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -227,3 +233,45 @@ export const flightBookings = mysqlTable("flightBookings", {
 
 export type FlightBooking = typeof flightBookings.$inferSelect;
 export type InsertFlightBooking = typeof flightBookings.$inferInsert;
+
+// ─── Checklists de Visita ───────────────────────────────────
+export const checklists = mysqlTable("checklists", {
+  id: int("id").autoincrement().primaryKey(),
+  visitId: int("visitId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  items: text("items").notNull(), // JSON array of { label, checked }
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Checklist = typeof checklists.$inferSelect;
+export type InsertChecklist = typeof checklists.$inferInsert;
+
+// ─── Equipamentos de Visita ─────────────────────────────────
+export const visitEquipment = mysqlTable("visitEquipment", {
+  id: int("id").autoincrement().primaryKey(),
+  visitId: int("visitId").notNull(),
+  equipmentName: varchar("equipmentName", { length: 255 }).notNull(),
+  serialNumber: varchar("serialNumber", { length: 100 }),
+  quantity: int("quantity").default(1).notNull(),
+  status: mysqlEnum("status", ["levado", "devolvido", "permaneceu"]).default("levado").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type VisitEquipment = typeof visitEquipment.$inferSelect;
+export type InsertVisitEquipment = typeof visitEquipment.$inferInsert;
+
+// ─── Histórico de Alterações (Audit Log) ────────────────────
+export const auditLog = mysqlTable("auditLog", {
+  id: int("id").autoincrement().primaryKey(),
+  entity: varchar("entity", { length: 50 }).notNull(),
+  entityId: int("entityId"),
+  action: varchar("action", { length: 50 }).notNull(),
+  changedBy: varchar("changedBy", { length: 255 }),
+  changes: text("changes"), // JSON of changed fields
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditLog = typeof auditLog.$inferSelect;
+export type InsertAuditLog = typeof auditLog.$inferInsert;

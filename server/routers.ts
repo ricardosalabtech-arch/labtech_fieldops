@@ -1,10 +1,12 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
+import { storagePut } from "./storage";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Acesso restrito a administradores" });
@@ -152,18 +154,42 @@ export const appRouter = router({
       city: z.string().min(1),
       state: z.string().optional(),
       visitDate: z.number(),
+      endDate: z.number().optional(),
       scheduledTime: z.string().optional(),
+      visitType: z.enum(["manutencao_preventiva", "manutencao_corretiva", "consultoria", "treinamento"]).default("manutencao_preventiva"),
       employeeId: z.number().optional(),
       employeeName: z.string().optional(),
+      tripId: z.number().optional(),
       status: z.enum(["agendado", "em_andamento", "concluido", "cancelado"]).default("agendado"),
       transportMode: z.enum(["carro_empresa", "transporte_publico", "app", "aviao"]).optional(),
       description: z.string().optional(),
       notes: z.string().optional(),
-    })).mutation(async ({ input }) => {
-      return db.createVisit({
-        ...input,
-        visitDate: new Date(input.visitDate),
-      });
+      clientNotified: z.number().optional(),
+      specialistNotified: z.number().optional(),
+      technicianNotified: z.number().optional(),
+    })).mutation(async ({ input, ctx }) => {
+      const data: any = { ...input };
+      data.visitDate = new Date(input.visitDate);
+      if (input.endDate) data.endDate = new Date(input.endDate);
+      const result = await db.createVisit(data);
+      await db.createAuditLog({ entity: "visit", entityId: result.id, action: "create", changedBy: ctx.user.name, changes: JSON.stringify(input) });
+      // Send real notifications based on form checkboxes
+      const visitTypeLabel = input.visitType ? ({ manutencao_preventiva: "Manutenção Preventiva", manutencao_corretiva: "Manutenção Corretiva", consultoria: "Consultoria", treinamento: "Treinamento" } as Record<string, string>)[input.visitType] : "Visita Técnica";
+      const notifyParts: string[] = [];
+      if (input.clientNotified) notifyParts.push("Cliente");
+      if (input.specialistNotified) notifyParts.push("Especialista");
+      if (input.technicianNotified) notifyParts.push("Técnico");
+      if (notifyParts.length > 0) {
+        try {
+          await notifyOwner({
+            title: `Nova Visita Agendada — ${input.clientName || "Cliente"}`,
+            content: `Tipo: ${visitTypeLabel}\nData: ${new Date(input.visitDate).toLocaleString("pt-BR")}${input.endDate ? " até " + new Date(input.endDate).toLocaleString("pt-BR") : ""}\nLocal: ${input.city || ""}/${input.state || ""}\nTécnico: ${input.employeeName || "Não atribuído"}\nNotificar: ${notifyParts.join(", ")}`,
+          });
+        } catch (e) {
+          console.warn("[Visits] Failed to send notification:", e);
+        }
+      }
+      return result;
     }),
     update: protectedProcedure.input(z.object({
       id: z.number(),
@@ -173,16 +199,24 @@ export const appRouter = router({
       city: z.string().optional(),
       state: z.string().optional(),
       visitDate: z.number().optional(),
+      endDate: z.number().optional(),
       scheduledTime: z.string().optional(),
+      visitType: z.enum(["manutencao_preventiva", "manutencao_corretiva", "consultoria", "treinamento"]).optional(),
       employeeId: z.number().optional(),
       employeeName: z.string().optional(),
+      tripId: z.number().optional(),
       status: z.enum(["agendado", "em_andamento", "concluido", "cancelado"]).optional(),
       transportMode: z.enum(["carro_empresa", "transporte_publico", "app", "aviao"]).optional(),
       description: z.string().optional(),
       notes: z.string().optional(),
-    })).mutation(async ({ input }) => {
+      clientNotified: z.number().optional(),
+      specialistNotified: z.number().optional(),
+      technicianNotified: z.number().optional(),
+    })).mutation(async ({ input, ctx }) => {
       const { id, ...data } = input;
       if (data.visitDate) data.visitDate = new Date(data.visitDate) as any;
+      if (data.endDate) data.endDate = new Date(data.endDate) as any;
+      await db.createAuditLog({ entity: "visit", entityId: id, action: "update", changedBy: ctx.user.name, changes: JSON.stringify(data) });
       return db.updateVisit(id, data as any);
     }),
     delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
@@ -299,8 +333,8 @@ export const appRouter = router({
 
   // ─── Documents ─────────────────────────────────────────────
   documents: router({
-    list: protectedProcedure.input(z.object({ category: z.string().optional() }).optional()).query(async ({ input }) => {
-      return db.getDocuments(input?.category);
+    list: protectedProcedure.input(z.object({ category: z.string().optional(), refId: z.number().optional() }).optional()).query(async ({ input }) => {
+      return db.getDocuments(input?.category, input?.refId);
     }),
     create: protectedProcedure.input(z.object({
       category: z.enum(["veiculo", "condutor", "voucher", "passagem", "visita", "cliente"]),
@@ -313,6 +347,29 @@ export const appRouter = router({
       uploadedBy: z.string().optional(),
     })).mutation(async ({ input }) => {
       return db.createDocument(input);
+    }),
+    upload: protectedProcedure.input(z.object({
+      category: z.enum(["veiculo", "condutor", "voucher", "passagem", "visita", "cliente"]),
+      refId: z.number().optional(),
+      fileName: z.string().min(1),
+      mimeType: z.string().default("application/octet-stream"),
+      fileBase64: z.string().min(1),
+    })).mutation(async ({ input, ctx }) => {
+      const buffer = Buffer.from(input.fileBase64.split(",").pop() ?? input.fileBase64, "base64");
+      const ext = input.fileName.split(".").pop() || "bin";
+      const key = `documents/${input.category}/${Date.now()}-${input.fileName.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const { key: storedKey, url } = await storagePut(key, buffer, input.mimeType);
+      const doc = await db.createDocument({
+        category: input.category,
+        refId: input.refId,
+        name: input.fileName,
+        fileUrl: url,
+        fileKey: storedKey,
+        mimeType: input.mimeType,
+        fileSize: buffer.length,
+        uploadedBy: ctx.user.name ?? "unknown",
+      });
+      return doc;
     }),
     delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await db.deleteDocument(input.id);
@@ -532,6 +589,74 @@ export const appRouter = router({
     delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await db.deleteFlightBooking(input.id);
       return { success: true };
+    }),
+  }),
+
+  // ─── Checklists ───────────────────────────────────────────
+  checklists: router({
+    list: protectedProcedure.input(z.object({ visitId: z.number().optional() }).optional()).query(async ({ input }) => {
+      return db.getChecklists(input?.visitId);
+    }),
+    create: protectedProcedure.input(z.object({
+      visitId: z.number(),
+      title: z.string().min(1),
+      items: z.string(),
+    })).mutation(async ({ input }) => {
+      return db.createChecklist(input);
+    }),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      items: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      const { id, ...data } = input;
+      return db.updateChecklist(id, data);
+    }),
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+      await db.deleteChecklist(input.id);
+      return { success: true };
+    }),
+  }),
+
+  // ─── Visit Equipment ───────────────────────────────────────
+  visitEquipment: router({
+    list: protectedProcedure.input(z.object({ visitId: z.number() })).query(async ({ input }) => {
+      return db.getVisitEquipment(input.visitId);
+    }),
+    create: protectedProcedure.input(z.object({
+      visitId: z.number(),
+      equipmentName: z.string().min(1),
+      serialNumber: z.string().optional(),
+      quantity: z.number().default(1),
+      status: z.enum(["levado", "devolvido", "permaneceu"]).default("levado"),
+      notes: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      return db.createVisitEquipment(input);
+    }),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      equipmentName: z.string().optional(),
+      serialNumber: z.string().optional(),
+      quantity: z.number().optional(),
+      status: z.enum(["levado", "devolvido", "permaneceu"]).optional(),
+      notes: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      const { id, ...data } = input;
+      return db.updateVisitEquipment(id, data);
+    }),
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+      await db.deleteVisitEquipment(input.id);
+      return { success: true };
+    }),
+  }),
+
+  // ─── Audit Log ─────────────────────────────────────────────
+  auditLog: router({
+    list: adminProcedure.input(z.object({
+      entity: z.string().optional(),
+      entityId: z.number().optional(),
+    }).optional()).query(async ({ input }) => {
+      return db.getAuditLog(input?.entity, input?.entityId);
     }),
   }),
 

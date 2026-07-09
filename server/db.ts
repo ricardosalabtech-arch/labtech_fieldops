@@ -12,6 +12,9 @@ import {
   InsertDriver, drivers,
   InsertExpense, expenses,
   InsertFlightBooking, flightBookings,
+  InsertChecklist, checklists,
+  InsertVisitEquipment, visitEquipment,
+  InsertAuditLog, auditLog,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -249,13 +252,19 @@ export async function deleteHotelReservation(id: number) {
 }
 
 // ─── Documents ──────────────────────────────────────────────
-export async function getDocuments(category?: string) {
+export async function getDocuments(category?: string, refId?: number) {
   const db = await getDb();
   if (!db) return [];
-  if (category) {
-    return db.select().from(documents).where(eq(documents.category, category as any)).orderBy(desc(documents.createdAt));
+  const conditions = [];
+  if (category) conditions.push(eq(documents.category, category as any));
+  if (refId) conditions.push(eq(documents.refId, refId));
+  if (conditions.length === 0) {
+    return db.select().from(documents).orderBy(desc(documents.createdAt));
   }
-  return db.select().from(documents).orderBy(desc(documents.createdAt));
+  if (conditions.length === 1) {
+    return db.select().from(documents).where(conditions[0]).orderBy(desc(documents.createdAt));
+  }
+  return db.select().from(documents).where(and(...conditions)).orderBy(desc(documents.createdAt));
 }
 
 export async function createDocument(data: InsertDocument) {
@@ -475,4 +484,84 @@ export async function deleteFlightBooking(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(flightBookings).where(eq(flightBookings.id, id));
+}
+
+// ─── Checklists ─────────────────────────────────────────────
+export async function getChecklists(visitId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  if (visitId) {
+    return db.select().from(checklists).where(eq(checklists.visitId, visitId)).orderBy(desc(checklists.createdAt));
+  }
+  return db.select().from(checklists).orderBy(desc(checklists.createdAt));
+}
+
+export async function createChecklist(data: InsertChecklist) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(checklists).values(data);
+  const result = await db.select().from(checklists).orderBy(desc(checklists.id)).limit(1);
+  return result[0];
+}
+
+export async function updateChecklist(id: number, data: Partial<InsertChecklist>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(checklists).set(data).where(eq(checklists.id, id));
+  const result = await db.select().from(checklists).where(eq(checklists.id, id)).limit(1);
+  return result[0];
+}
+
+export async function deleteChecklist(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(checklists).where(eq(checklists.id, id));
+}
+
+// ─── Visit Equipment ────────────────────────────────────────
+export async function getVisitEquipment(visitId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(visitEquipment).where(eq(visitEquipment.visitId, visitId)).orderBy(desc(visitEquipment.createdAt));
+}
+
+export async function createVisitEquipment(data: InsertVisitEquipment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(visitEquipment).values(data);
+  const result = await db.select().from(visitEquipment).orderBy(desc(visitEquipment.id)).limit(1);
+  return result[0];
+}
+
+export async function updateVisitEquipment(id: number, data: Partial<InsertVisitEquipment>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(visitEquipment).set(data).where(eq(visitEquipment.id, id));
+  const result = await db.select().from(visitEquipment).where(eq(visitEquipment.id, id)).limit(1);
+  return result[0];
+}
+
+export async function deleteVisitEquipment(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(visitEquipment).where(eq(visitEquipment.id, id));
+}
+
+// ─── Audit Log ──────────────────────────────────────────────
+export async function getAuditLog(entity?: string, entityId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [];
+  if (entity) conditions.push(eq(auditLog.entity, entity));
+  if (entityId) conditions.push(eq(auditLog.entityId, entityId));
+  if (conditions.length > 0) {
+    return db.select().from(auditLog).where(and(...conditions)).orderBy(desc(auditLog.createdAt));
+  }
+  return db.select().from(auditLog).orderBy(desc(auditLog.createdAt));
+}
+
+export async function createAuditLog(data: InsertAuditLog) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(auditLog).values(data);
 }

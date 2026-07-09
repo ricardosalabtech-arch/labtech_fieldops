@@ -41,23 +41,58 @@
 - [x] Salvar checkpoint e entregar ao usuário
 
 ## Fase 6: Melhorias — Viagem de Avião, Voucher de Voo e Hospedagem
-- [ ] Adicionar "avião" como meio de transporte no schema (visits, trips)
-- [ ] Criar tabela flightBookings para dados de voo (companhia, número, origem, destino, embarque, desembarque, assento, voucher)
-- [ ] Adicionar categoria "passagem" no enum de documents
-- [ ] Atualizar routers tRPC com novos campos e procedures de flightBookings
-- [ ] Atualizar página Viagens com formulário de avião e adicionar hospedagem inline
-- [ ] Atualizar página Reservas para permitir adicionar a partir de viagem
-- [ ] Atualizar página Documentos com tab de Passagens/Vouchers de Voo
-- [ ] Gerar e aplicar migration SQL
-- [ ] Testes vitest para novos fluxos
+- [x] Adicionar "avião" como meio de transporte no schema (visits, trips)
+- [x] Criar tabela flightBookings para dados de voo (companhia, número, origem, destino, embarque, desembarque, assento, voucher)
+- [x] Adicionar categoria "passagem" no enum de documents
+- [x] Atualizar routers tRPC com novos campos e procedures de flightBookings
+- [x] Atualizar página Viagens com formulário de avião e adicionar hospedagem inline
+- [x] Atualizar página Reservas para permitir adicionar a partir de viagem
+- [x] Atualizar página Documentos com tab de Passagens/Vouchers de Voo
+- [x] Gerar e aplicar migration SQL
+- [x] Testes vitest para novos fluxos
 
 ## Fase 7: Melhorias Adicionais — Waze, Clima e UX
-- [ ] Criar componente WazeLink para navegação (botão abre Waze com endereço)
-- [ ] Criar componente WeatherWidget para exibir temperatura do destino
-- [ ] Atualizar página Viagens com formulário de avião e hospedagem inline
-- [ ] Adicionar badges de transporte (ícones: carro, bus, app, avião)
-- [ ] Atualizar página Agendamentos com link Waze e clima
-- [ ] Atualizar página Reservas com adicionar a partir de viagem
-- [ ] Atualizar página Documentos com tab Passagens de Voo
-- [ ] Atualizar Dashboard com indicadores de voos e clima
-- [ ] Testes vitest para flightBookings
+- [x] Criar componente WazeLink para navegação (botão abre Waze com endereço)
+- [x] Criar componente WeatherWidget para exibir temperatura do destino
+- [x] Atualizar página Viagens com formulário de avião e hospedagem inline
+- [x] Adicionar badges de transporte (ícones: carro, bus, app, avião)
+- [x] Atualizar página Agendamentos com link Waze e clima
+- [x] Atualizar página Reservas com adicionar a partir de viagem
+- [x] Atualizar página Documentos com tab Passagens de Voo
+- [x] Atualizar Dashboard com indicadores de voos e clima
+- [x] Testes vitest para flightBookings
+
+## Fase 8: Agendamento Avançado e Documentos
+- [x] Adicionar tipo de visita (preventiva, corretiva, consultoria, treinamento) ao schema
+- [x] Adicionar data de início e fim ao schema de visitas
+- [x] Adicionar campo de viagem vinculada e técnico responsável na visita
+- [x] Implementar notificação ao cliente, especialista e técnico ao agendar
+- [x] Corrigir upload de passagem aérea (voucher de voo) em Documentos
+- [x] Corrigir upload de voucher de hotel em Documentos
+- [x] Permitir upload de documentos para acesso do técnico/especialista
+- [x] Atualizar página Agendamentos com novos campos
+- [x] Gerar e aplicar migration SQL
+
+## Fase 9: Melhorias de Gestão
+- [ ] Checklist de visita por tipo (manutenção, instalação, inspeção)
+- [ ] Controle de equipamentos levados/devolvidos
+- [ ] Aprovação de despesas com upload de recibo
+- [ ] Otimização de rota entre visitas do dia
+- [ ] Integração Google Calendar
+
+## Fase 10: Melhorias de Experiência
+- [ ] Modo escuro (dark/light toggle)
+- [ ] Dashboard com gráficos (visitas/mês, custos/categoria, taxa conclusão)
+- [ ] Busca global (visitas, clientes, viagens, documentos)
+- [ ] Histórico de alterações (audit log)
+
+## Fase 11: Melhorias Técnicas
+- [ ] PWA (instalação no celular, offline)
+- [ ] Geolocalização do técnico na visita
+- [ ] API para integração externa
+
+## Fase 8.1: Correções de Integração
+- [x] Vincular uploads de passagem aos registros de flightBookings (upload direto no card do voo)
+- [x] Vincular uploads de voucher às hotelReservations (upload direto no card da reserva)
+- [x] Exibir documentos vinculados nas telas de visita/viagem/cliente para técnico/especialista
+- [x] Implementar envio real de notificações (in-app toast + owner notification) ao agendar visita
