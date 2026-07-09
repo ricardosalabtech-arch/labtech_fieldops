@@ -87,9 +87,9 @@
 - [x] Histórico de alterações (audit log)
 
 ## Fase 11: Melhorias Técnicas
-- [ ] PWA (instalação no celular, offline)
-- [ ] Geolocalização do técnico na visita
-- [ ] API para integração externa
+- [x] PWA (instalação no celular, offline)
+- [x] Geolocalização do técnico na visita (persistente no backend)
+- [x] API para integração externa (tRPC procedures expostas)
 
 ## Fase 8.1: Correções de Integração
 - [x] Vincular uploads de passagem aos registros de flightBookings (upload direto no card do voo)
