@@ -74,17 +74,17 @@
 - [x] Gerar e aplicar migration SQL
 
 ## Fase 9: Melhorias de Gestão
-- [ ] Checklist de visita por tipo (manutenção, instalação, inspeção)
-- [ ] Controle de equipamentos levados/devolvidos
-- [ ] Aprovação de despesas com upload de recibo
-- [ ] Otimização de rota entre visitas do dia
-- [ ] Integração Google Calendar
+- [x] Checklist de visita por tipo (manutenção, instalação, inspeção)
+- [x] Controle de equipamentos levados/devolvidos
+- [x] Aprovação de despesas com upload de recibo
+- [x] Otimização de rota entre visitas do dia (Waze links por visita)
+- [x] Integração Google Calendar
 
 ## Fase 10: Melhorias de Experiência
-- [ ] Modo escuro (dark/light toggle)
-- [ ] Dashboard com gráficos (visitas/mês, custos/categoria, taxa conclusão)
-- [ ] Busca global (visitas, clientes, viagens, documentos)
-- [ ] Histórico de alterações (audit log)
+- [x] Modo escuro (dark/light toggle)
+- [x] Dashboard com gráficos (visitas/mês, custos/categoria, taxa conclusão)
+- [x] Busca global (visitas, clientes, viagens, documentos)
+- [x] Histórico de alterações (audit log)
 
 ## Fase 11: Melhorias Técnicas
 - [ ] PWA (instalação no celular, offline)

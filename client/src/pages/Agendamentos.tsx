@@ -7,12 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, MapPin, Clock, User, Bell } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, MapPin, Clock, User, Bell, FileCheck, Paperclip, ListChecks, Wrench, Plus, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import WazeLink from "@/components/WazeLink";
 import WeatherWidget from "@/components/WeatherWidget";
 import FileUpload from "@/components/FileUpload";
-import { FileCheck, Paperclip } from "lucide-react";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, addDays, addMonths, isSameDay, isSameMonth, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -36,6 +35,56 @@ export default function Agendamentos() {
     { category: "visita", refId: editingVisit?.id },
     { enabled: !!editingVisit?.id }
   );
+  const { data: visitChecklists } = trpc.checklists.list.useQuery(
+    { visitId: editingVisit?.id },
+    { enabled: !!editingVisit?.id }
+  );
+  const { data: visitEquipments } = trpc.visitEquipment.list.useQuery(
+    { visitId: editingVisit?.id },
+    { enabled: !!editingVisit?.id }
+  );
+  const createChecklist = trpc.checklists.create.useMutation({ onSuccess: () => utils.checklists.invalidate() });
+  const updateChecklistItem = trpc.checklists.update.useMutation({ onSuccess: () => utils.checklists.invalidate() });
+  const deleteChecklist = trpc.checklists.delete.useMutation({ onSuccess: () => utils.checklists.invalidate() });
+  const createEquipment = trpc.visitEquipment.create.useMutation({ onSuccess: () => utils.visitEquipment.invalidate() });
+  const updateEquipment = trpc.visitEquipment.update.useMutation({ onSuccess: () => utils.visitEquipment.invalidate() });
+  const deleteEquipment = trpc.visitEquipment.delete.useMutation({ onSuccess: () => utils.visitEquipment.invalidate() });
+  const [newChecklistTitle, setNewChecklistTitle] = useState("");
+  const [newEquipName, setNewEquipName] = useState("");
+  const [newEquipSerial, setNewEquipSerial] = useState("");
+  const [newEquipQty, setNewEquipQty] = useState(1);
+
+  const handleAddChecklist = () => {
+    if (!editingVisit || !newChecklistTitle.trim()) return;
+    createChecklist.mutate({
+      visitId: editingVisit.id,
+      title: newChecklistTitle,
+      items: JSON.stringify([{ label: "Item 1", checked: false }]),
+    });
+    setNewChecklistTitle("");
+    toast.success("Checklist criado");
+  };
+
+  const handleToggleChecklistItem = (checklistId: number, items: string, idx: number) => {
+    const parsed = JSON.parse(items) as { label: string; checked: boolean }[];
+    parsed[idx].checked = !parsed[idx].checked;
+    updateChecklistItem.mutate({ id: checklistId, items: JSON.stringify(parsed) });
+  };
+
+  const handleAddEquipment = () => {
+    if (!editingVisit || !newEquipName.trim()) return;
+    createEquipment.mutate({
+      visitId: editingVisit.id,
+      equipmentName: newEquipName,
+      serialNumber: newEquipSerial || undefined,
+      quantity: newEquipQty,
+      status: "levado",
+    });
+    setNewEquipName("");
+    setNewEquipSerial("");
+    setNewEquipQty(1);
+    toast.success("Equipamento adicionado");
+  };
 
   const utils = trpc.useUtils();
   const { data: visits } = trpc.visits.list.useQuery({
@@ -481,6 +530,77 @@ export default function Agendamentos() {
           {form.address && form.city && (
             <div className="flex items-center gap-2 pt-2 border-t">
               <WazeLink address={form.address} city={form.city} label="Abrir endereço no Waze" />
+            </div>
+          )}
+          {editingVisit && (
+            <div className="pt-3 border-t">
+              <div className="flex items-center gap-2 mb-2">
+                <ListChecks className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Checklist da Visita</span>
+              </div>
+              <div className="flex gap-2 mb-2">
+                <Input value={newChecklistTitle} onChange={e => setNewChecklistTitle(e.target.value)} placeholder="Título do checklist (ex: Inspeção Preventiva)" className="flex-1" />
+                <Button size="sm" variant="outline" onClick={handleAddChecklist} disabled={!newChecklistTitle.trim()}><Plus className="h-4 w-4" /></Button>
+              </div>
+              {visitChecklists && visitChecklists.length > 0 ? (
+                <div className="space-y-2">
+                  {visitChecklists.map((cl: any) => {
+                    const items = JSON.parse(cl.items) as { label: string; checked: boolean }[];
+                    return (
+                      <div key={cl.id} className="rounded-lg border p-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium">{cl.title}</span>
+                          <Button size="sm" variant="ghost" onClick={() => { deleteChecklist.mutate(cl.id); toast.success("Checklist removido"); }}><Trash2 className="h-3 w-3 text-red-500" /></Button>
+                        </div>
+                        {items.map((item, idx) => (
+                          <label key={idx} className="flex items-center gap-2 py-0.5 cursor-pointer">
+                            <Checkbox checked={item.checked} onCheckedChange={() => handleToggleChecklistItem(cl.id, cl.items, idx)} />
+                            <span className={`text-sm ${item.checked ? "line-through text-muted-foreground" : ""}`}>{item.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Nenhum checklist criado para esta visita.</p>
+              )}
+            </div>
+          )}
+          {editingVisit && (
+            <div className="pt-3 border-t">
+              <div className="flex items-center gap-2 mb-2">
+                <Wrench className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Equipamentos da Visita</span>
+              </div>
+              <div className="grid grid-cols-12 gap-2 mb-2">
+                <Input value={newEquipName} onChange={e => setNewEquipName(e.target.value)} placeholder="Equipamento" className="col-span-5" />
+                <Input value={newEquipSerial} onChange={e => setNewEquipSerial(e.target.value)} placeholder="Nº Série" className="col-span-4" />
+                <Input type="number" value={newEquipQty} onChange={e => setNewEquipQty(parseInt(e.target.value) || 1)} className="col-span-2" min={1} />
+                <Button size="sm" variant="outline" className="col-span-1" onClick={handleAddEquipment} disabled={!newEquipName.trim()}><Plus className="h-4 w-4" /></Button>
+              </div>
+              {visitEquipments && visitEquipments.length > 0 ? (
+                <div className="space-y-1.5">
+                  {visitEquipments.map((eq: any) => (
+                    <div key={eq.id} className="flex items-center gap-2 rounded-lg border px-3 py-2">
+                      <span className="text-sm font-medium flex-1">{eq.equipmentName}</span>
+                      {eq.serialNumber && <span className="text-xs text-muted-foreground">S/N: {eq.serialNumber}</span>}
+                      <span className="text-xs text-muted-foreground">Qtd: {eq.quantity}</span>
+                      <Select value={eq.status} onValueChange={(v) => updateEquipment.mutate({ id: eq.id, status: v as any })}>
+                        <SelectTrigger className="w-28 h-7 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="levado">Levado</SelectItem>
+                          <SelectItem value="devolvido">Devolvido</SelectItem>
+                          <SelectItem value="permaneceu">Permaneceu</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button size="sm" variant="ghost" onClick={() => { deleteEquipment.mutate(eq.id); toast.success("Equipamento removido"); }}><Trash2 className="h-3 w-3 text-red-500" /></Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Nenhum equipamento registrado para esta visita.</p>
+              )}
             </div>
           )}
           {editingVisit && (

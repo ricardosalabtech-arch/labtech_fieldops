@@ -129,7 +129,7 @@ export type InsertHotelReservation = typeof hotelReservations.$inferInsert;
 // ─── Documentos ─────────────────────────────────────────────
 export const documents = mysqlTable("documents", {
   id: int("id").autoincrement().primaryKey(),
-  category: mysqlEnum("category", ["veiculo", "condutor", "voucher", "passagem", "visita", "cliente"]).notNull(),
+  category: mysqlEnum("category", ["veiculo", "condutor", "voucher", "passagem", "visita", "cliente", "despesa"]).notNull(),
   refId: int("refId"),
   name: varchar("name", { length: 255 }).notNull(),
   fileUrl: text("fileUrl").notNull(),

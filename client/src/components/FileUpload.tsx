@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
 interface FileUploadProps {
-  category: "veiculo" | "condutor" | "voucher" | "passagem" | "visita" | "cliente";
+  category: "veiculo" | "condutor" | "voucher" | "passagem" | "visita" | "cliente" | "despesa";
   refId?: number;
   label?: string;
   accept?: string;

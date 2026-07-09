@@ -6,10 +6,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, Plus, CheckCircle, XCircle, Clock, Trash2, TrendingUp } from "lucide-react";
+import { DollarSign, Plus, CheckCircle, XCircle, Clock, Trash2, TrendingUp, Paperclip, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import FileUpload from "@/components/FileUpload";
 
 const categoryConfig = {
   transporte: { label: "Transporte", color: "bg-blue-100 text-blue-700" },
@@ -26,6 +27,11 @@ const statusConfig = {
 
 export default function Custos() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<any>(null);
+  const { data: linkedExpenseDocs } = trpc.documents.list.useQuery(
+    { category: "despesa", refId: editingExpense?.id },
+    { enabled: !!editingExpense?.id }
+  );
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterEmployee, setFilterEmployee] = useState("all");
 
@@ -253,6 +259,33 @@ export default function Custos() {
               </Select>
             </div>
           </div>
+          {editingExpense && (
+            <div className="pt-3 border-t">
+              <div className="flex items-center gap-2 mb-2">
+                <Paperclip className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Recibo / Comprovante</span>
+              </div>
+              <FileUpload
+                category="despesa"
+                refId={editingExpense.id}
+                label="Anexar recibo (foto, PDF, cupom fiscal)"
+                accept=".pdf,.jpg,.jpeg,.png,.bmp"
+                onUploaded={() => toast.success("Recibo anexado à despesa")}
+              />
+              {linkedExpenseDocs && linkedExpenseDocs.length > 0 ? (
+                <div className="space-y-1.5 mt-2">
+                  {linkedExpenseDocs.map((d: any) => (
+                    <a key={d.id} href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 hover:bg-green-100 transition-colors">
+                      <FileCheck className="h-4 w-4 text-green-600 shrink-0" />
+                      <span className="text-sm text-green-700 truncate flex-1">{d.name}</span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-1">Nenhum recibo anexado ainda.</p>
+              )}
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleSubmit} disabled={createExpense.isPending}>Registrar Despesa</Button>

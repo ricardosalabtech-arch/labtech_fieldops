@@ -1,17 +1,64 @@
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, CheckCircle2, Clock, DollarSign, Building2, BedDouble, Plus, ArrowRight, Plane } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, DollarSign, Building2, BedDouble, Plus, ArrowRight, Plane, Search, FileText } from "lucide-react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import WazeLink from "@/components/WazeLink";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem, CommandEmpty } from "@/components/ui/command";
+import { useState, useMemo } from "react";
 
 export default function Dashboard() {
   const { data: stats, isLoading } = trpc.dashboard.stats.useQuery();
   const { data: visits } = trpc.visits.list.useQuery({ status: "agendado" });
+  const { data: allVisits } = trpc.visits.list.useQuery();
+  const { data: clients } = trpc.clients.list.useQuery();
+  const { data: trips } = trpc.trips.list.useQuery();
   const { data: flights } = trpc.flightBookings.list.useQuery();
+  const { data: expenses } = trpc.expenses.list.useQuery();
+  const { data: documents } = trpc.documents.list.useQuery();
+  const { data: auditLog } = trpc.auditLog.list.useQuery();
   const [, setLocation] = useLocation();
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const chartData = useMemo(() => {
+    const months = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date();
+      d.setMonth(d.getMonth() - (5 - i));
+      return { month: format(d, "MMM", { locale: ptBR }), visits: 0, costs: 0 };
+    });
+    allVisits?.forEach(v => {
+      const m = format(new Date(v.visitDate), "MMM", { locale: ptBR });
+      const entry = months.find(x => x.month === m);
+      if (entry) entry.visits++;
+    });
+    expenses?.forEach(e => {
+      const m = format(new Date(e.createdAt), "MMM", { locale: ptBR });
+      const entry = months.find(x => x.month === m);
+      if (entry) entry.costs += parseFloat(e.amount);
+    });
+    return months;
+  }, [allVisits, expenses]);
+
+  const costByCategory = useMemo(() => {
+    const cats = { transporte: 0, hospedagem: 0, alimentacao: 0, outros: 0 };
+    expenses?.forEach(e => { cats[e.category as keyof typeof cats] += parseFloat(e.amount); });
+    return [
+      { name: "Transporte", value: cats.transporte, fill: "oklch(0.62 0.19 250)" },
+      { name: "Hospedagem", value: cats.hospedagem, fill: "oklch(0.70 0.15 180)" },
+      { name: "Alimentação", value: cats.alimentacao, fill: "oklch(0.72 0.18 140)" },
+      { name: "Outros", value: cats.outros, fill: "oklch(0.75 0.15 80)" },
+    ];
+  }, [expenses]);
+
+  const completionRate = useMemo(() => {
+    const total = allVisits?.length || 0;
+    const done = allVisits?.filter(v => v.status === "concluido")?.length || 0;
+    return total > 0 ? Math.round((done / total) * 100) : 0;
+  }, [allVisits]);
 
   const upcomingFlights = flights?.filter(f => new Date(f.departureDateTime) >= new Date() && f.status !== "cancelada").slice(0, 3) || [];
 
@@ -35,11 +82,66 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-[oklch(0.22_0.02_250)]">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
+              {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => setSearchOpen(true)}>
+            <Search className="h-4 w-4" /> Buscar
+          </Button>
+        </div>
       </div>
+
+      {/* Busca Global */}
+      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <CommandInput placeholder="Buscar visitas, clientes, viagens..." />
+        <CommandList>
+          <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+          {allVisits && allVisits.length > 0 && (
+            <CommandGroup heading="Visitas">
+              {allVisits.filter(v => v.clientName).slice(0, 5).map(v => (
+                <CommandItem key={v.id} onSelect={() => { setSearchOpen(false); setLocation("/agendamentos"); }}>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  <span>{v.clientName} — {format(new Date(v.visitDate), "dd/MM/yyyy")}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {clients && clients.length > 0 && (
+            <CommandGroup heading="Clientes">
+              {clients.slice(0, 5).map(c => (
+                <CommandItem key={c.id} onSelect={() => { setSearchOpen(false); setLocation("/clientes"); }}>
+                  <Building2 className="mr-2 h-4 w-4" />
+                  <span>{c.companyName}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {trips && trips.length > 0 && (
+            <CommandGroup heading="Viagens">
+              {trips.slice(0, 5).map(t => (
+                <CommandItem key={t.id} onSelect={() => { setSearchOpen(false); setLocation("/viagens"); }}>
+                  <Plane className="mr-2 h-4 w-4" />
+                  <span>{t.employeeName || "Viagem"} — {format(new Date(t.departureDate), "dd/MM/yyyy")}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {documents && documents.length > 0 && (
+            <CommandGroup heading="Documentos">
+              {documents.slice(0, 5).map(d => (
+                <CommandItem key={d.id} onSelect={() => { setSearchOpen(false); setLocation("/documentos"); }}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>{d.name}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+        </CommandList>
+      </CommandDialog>
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -80,6 +182,54 @@ export default function Dashboard() {
                 {action.label}
               </Button>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="border-0 shadow-sm lg:col-span-2">
+          <CardHeader><CardTitle className="text-base font-semibold">Visitas e Custos (6 meses)</CardTitle></CardHeader>
+          <CardContent>
+            <ChartContainer config={{ visits: { label: "Visitas" }, costs: { label: "Custos" } }} className="h-[200px] w-full">
+              <BarChart data={chartData}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
+                <YAxis tickLine={false} axisLine={false} fontSize={12} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="visits" fill="oklch(0.62 0.19 250)" radius={4} />
+                <Bar dataKey="costs" fill="oklch(0.70 0.15 180)" radius={4} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardHeader><CardTitle className="text-base font-semibold">Custos por Categoria</CardTitle></CardHeader>
+          <CardContent>
+            <ChartContainer config={{ value: { label: "Valor" } }} className="h-[200px] w-full">
+              <PieChart>
+                <Pie data={costByCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70}>
+                  {costByCategory.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Taxa de Conclusão */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Taxa de Conclusão de Visitas</p>
+              <p className="text-3xl font-bold text-foreground mt-1">{completionRate}%</p>
+            </div>
+            <div className="w-32 h-32 rounded-full flex items-center justify-center" style={{ background: `conic-gradient(oklch(0.62 0.19 250) ${completionRate}%, oklch(0.90 0.005 250) 0)` }}>
+              <div className="w-24 h-24 rounded-full bg-card flex items-center justify-center">
+                <span className="text-lg font-bold text-foreground">{completionRate}%</span>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -130,6 +280,32 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Histórico de Alterações */}
+      {auditLog && auditLog.length > 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader><CardTitle className="text-base font-semibold">Histórico de Alterações</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {auditLog.slice(0, 10).map((log: any) => (
+                <div key={log.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                    <Clock className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {log.action === "create" ? "Criou" : log.action === "update" ? "Atualizou" : "Excluiu"} {log.entity}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {log.changedBy} · {format(new Date(log.createdAt), "dd/MM/yyyy HH:mm")}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Próximos Voos */}
       {upcomingFlights.length > 0 && (

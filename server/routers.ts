@@ -337,7 +337,7 @@ export const appRouter = router({
       return db.getDocuments(input?.category, input?.refId);
     }),
     create: protectedProcedure.input(z.object({
-      category: z.enum(["veiculo", "condutor", "voucher", "passagem", "visita", "cliente"]),
+      category: z.enum(["veiculo", "condutor", "voucher", "passagem", "visita", "cliente", "despesa"]),
       refId: z.number().optional(),
       name: z.string().min(1),
       fileUrl: z.string().min(1),
@@ -349,7 +349,7 @@ export const appRouter = router({
       return db.createDocument(input);
     }),
     upload: protectedProcedure.input(z.object({
-      category: z.enum(["veiculo", "condutor", "voucher", "passagem", "visita", "cliente"]),
+      category: z.enum(["veiculo", "condutor", "voucher", "passagem", "visita", "cliente", "despesa"]),
       refId: z.number().optional(),
       fileName: z.string().min(1),
       mimeType: z.string().default("application/octet-stream"),
