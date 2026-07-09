@@ -7,11 +7,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings, User, Plus, Pencil, Trash2, ShieldCheck, Users } from "lucide-react";
+import { Settings, User, Plus, Pencil, Trash2, ShieldCheck, Users, Camera } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import FileUpload from "@/components/FileUpload";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Configuracoes() {
   const { user } = useAuth();
@@ -37,11 +39,11 @@ export default function Configuracoes() {
 
   const [empForm, setEmpForm] = useState({
     name: "", email: "", phone: "", position: "", department: "",
-    hireDate: "", status: "ativo",
+    hireDate: "", status: "ativo", role: "tecnico", password: "", photoUrl: "",
   });
 
   function resetEmpForm() {
-    setEmpForm({ name: "", email: "", phone: "", position: "", department: "", hireDate: "", status: "ativo" });
+    setEmpForm({ name: "", email: "", phone: "", position: "", department: "", hireDate: "", status: "ativo", role: "tecnico", password: "", photoUrl: "" });
     setEditingEmp(null);
   }
 
@@ -51,19 +53,25 @@ export default function Configuracoes() {
       name: e.name || "", email: e.email || "", phone: e.phone || "",
       position: e.position || "", department: e.department || "",
       hireDate: e.hireDate ? format(new Date(e.hireDate), "yyyy-MM-dd") : "",
-      status: e.status || "ativo",
+      status: e.status || "ativo", role: e.role || "tecnico", password: "",
+      photoUrl: e.photoUrl || "",
     });
     setEmpDialogOpen(true);
   }
 
   function handleEmpSubmit() {
     if (!empForm.name) { toast.error("Nome é obrigatório"); return; }
+    if (!empForm.email) { toast.error("E-mail é obrigatório para login"); return; }
+    if (!editingEmp && !empForm.password) { toast.error("Senha é obrigatória para novo funcionário"); return; }
     const data: any = {
       name: empForm.name, email: empForm.email || undefined, phone: empForm.phone || undefined,
+      role: empForm.role,
       position: empForm.position || undefined, department: empForm.department || undefined,
       hireDate: empForm.hireDate ? new Date(empForm.hireDate + "T00:00:00").getTime() : undefined,
       status: empForm.status,
     };
+    if (empForm.password) data.password = empForm.password;
+    if (empForm.photoUrl) data.photoUrl = empForm.photoUrl;
     if (editingEmp) updateEmp.mutate({ id: editingEmp.id, ...data });
     else createEmp.mutate(data);
   }
@@ -143,12 +151,18 @@ export default function Configuracoes() {
                   <Card key={e.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                          <User className="h-5 w-5 text-indigo-600" />
-                        </div>
+                        <Avatar className="w-10 h-10 rounded-lg">
+                          <AvatarImage src={e.photoUrl ?? undefined} alt={e.name} />
+                          <AvatarFallback className="bg-indigo-100">
+                            <User className="h-5 w-5 text-indigo-600" />
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
                           <CardTitle className="text-sm font-semibold">{e.name}</CardTitle>
                           {e.position && <p className="text-xs text-muted-foreground">{e.position}</p>}
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${e.role === "administrador" ? "bg-blue-100 text-blue-700" : e.role === "especialista" ? "bg-purple-100 text-purple-700" : "bg-teal-100 text-teal-700"}`}>
+                            {e.role}
+                          </span>
                         </div>
                       </div>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full ${e.status === "ativo" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
@@ -178,11 +192,39 @@ export default function Configuracoes() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{editingEmp ? "Editar Funcionário" : "Novo Funcionário"}</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-2">
+            {/* Photo upload */}
+            <div className="col-span-2 flex items-center gap-4">
+              <Avatar className="w-20 h-20 rounded-full border-2 border-border">
+                <AvatarImage src={empForm.photoUrl} alt={empForm.name} />
+                <AvatarFallback className="bg-muted text-muted-foreground">
+                  <Camera className="w-6 h-6" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <Label>Foto do Funcionário</Label>
+                <FileUpload
+                  category="veiculo"
+                  refId={editingEmp?.id?.toString() || "new"}
+                  onUploaded={(url) => setEmpForm(f => ({ ...f, photoUrl: url }))}
+                  label="Enviar Foto"
+                />
+              </div>
+            </div>
             <div className="col-span-2"><Label>Nome *</Label><Input value={empForm.name} onChange={e => setEmpForm(f => ({ ...f, name: e.target.value }))} /></div>
             <div><Label>Email</Label><Input type="email" value={empForm.email} onChange={e => setEmpForm(f => ({ ...f, email: e.target.value }))} /></div>
             <div><Label>Telefone</Label><Input value={empForm.phone} onChange={e => setEmpForm(f => ({ ...f, phone: e.target.value }))} /></div>
             <div><Label>Cargo</Label><Input value={empForm.position} onChange={e => setEmpForm(f => ({ ...f, position: e.target.value }))} placeholder="Técnico, Analista..." /></div>
             <div><Label>Departamento</Label><Input value={empForm.department} onChange={e => setEmpForm(f => ({ ...f, department: e.target.value }))} /></div>
+            <div><Label>Perfil de Acesso *</Label>
+              <Select value={empForm.role} onValueChange={v => setEmpForm(f => ({ ...f, role: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tecnico">Técnico</SelectItem>
+                  <SelectItem value="especialista">Especialista</SelectItem>
+                  <SelectItem value="administrador">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Data de Admissão</Label><Input type="date" value={empForm.hireDate} onChange={e => setEmpForm(f => ({ ...f, hireDate: e.target.value }))} /></div>
             <div><Label>Status</Label>
               <Select value={empForm.status} onValueChange={v => setEmpForm(f => ({ ...f, status: v }))}>
@@ -193,6 +235,7 @@ export default function Configuracoes() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="col-span-2"><Label>{editingEmp ? "Nova Senha (deixe em branco para manter)" : "Senha *"}</Label><Input type="password" value={empForm.password} onChange={e => setEmpForm(f => ({ ...f, password: e.target.value }))} placeholder="Mínimo 6 caracteres" /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEmpDialogOpen(false)}>Cancelar</Button>

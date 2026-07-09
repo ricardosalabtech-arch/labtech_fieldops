@@ -27,6 +27,12 @@ export function useAuth(options?: UseAuthOptions) {
     },
   });
 
+  const loginWithPasswordMutation = trpc.auth.loginWithPassword.useMutation({
+    onSuccess: () => {
+      utils.auth.me.invalidate();
+    },
+  });
+
   const logout = useCallback(async () => {
     try {
       await logoutMutation.mutateAsync();
@@ -94,5 +100,8 @@ export function useAuth(options?: UseAuthOptions) {
     ...state,
     refresh: () => meQuery.refetch(),
     logout,
+    loginWithPassword: loginWithPasswordMutation.mutateAsync,
+    isLoginLoading: loginWithPasswordMutation.isPending,
+    loginError: loginWithPasswordMutation.error,
   };
 }

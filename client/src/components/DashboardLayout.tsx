@@ -2,6 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sun, Moon } from "lucide-react";
+import LoginScreen from "@/components/LoginScreen";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,37 +71,7 @@ export default function DashboardLayout({
   }
 
   if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[oklch(0.42_0.15_250)] to-[oklch(0.28_0.10_250)]">
-        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
-          <div className="flex flex-col items-center gap-6">
-            <div className="bg-white rounded-2xl px-6 py-4 shadow-2xl">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-[oklch(0.48_0.18_250)] flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">SA</span>
-                </div>
-                <span className="font-bold text-lg text-[oklch(0.22_0.02_250)]">LABTECH</span>
-              </div>
-            </div>
-            <div className="text-center">
-              <h1 className="text-2xl font-semibold tracking-tight text-white">
-                Gestão de Campo
-              </h1>
-              <p className="text-sm text-white/70 text-center max-w-sm mt-2">
-                Acesso restrito. Faça login para gerenciar viagens, agendamentos e hospedagem.
-              </p>
-            </div>
-          </div>
-          <Button
-            onClick={() => startLogin()}
-            size="lg"
-            className="w-full shadow-lg hover:shadow-xl transition-all bg-white text-[oklch(0.48_0.18_250)] hover:bg-white/90"
-          >
-            Entrar
-          </Button>
-        </div>
-      </div>
-    );
+    return <LoginScreen />;
   }
 
   return (

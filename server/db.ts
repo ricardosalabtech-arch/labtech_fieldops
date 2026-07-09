@@ -17,6 +17,7 @@ import {
   InsertAuditLog, auditLog,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { createHash, randomBytes } from 'crypto';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -135,6 +136,34 @@ export async function deleteEmployee(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(employees).where(eq(employees.id, id));
+}
+
+// ─── Password hashing for employee login ────────────────────
+export function hashPassword(password: string): string {
+  const salt = randomBytes(16).toString('hex');
+  const hash = createHash('sha256').update(salt + password).digest('hex');
+  return `${salt}:${hash}`;
+}
+
+export function verifyPassword(password: string, stored: string): boolean {
+  const [salt, hash] = stored.split(':');
+  if (!salt || !hash) return false;
+  const computed = createHash('sha256').update(salt + password).digest('hex');
+  return computed === hash;
+}
+
+export async function getEmployeeByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(employees).where(eq(employees.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getEmployeeById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(employees).where(eq(employees.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
 }
 
 // ─── Visits ─────────────────────────────────────────────────

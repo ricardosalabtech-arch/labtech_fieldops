@@ -49,6 +49,7 @@ export const employees = mysqlTable("employees", {
   hireDate: timestamp("hireDate"),
   status: mysqlEnum("status", ["ativo", "inativo"]).default("ativo").notNull(),
   photoUrl: text("photoUrl"),
+  passwordHash: varchar("passwordHash", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

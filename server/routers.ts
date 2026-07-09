@@ -1,6 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { notifyOwner } from "./_core/notification";
+import { sdk } from "./_core/sdk";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
@@ -22,6 +23,51 @@ export const appRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
+    }),
+    loginWithPassword: publicProcedure.input(z.object({
+      email: z.string().email(),
+      password: z.string().min(1),
+    })).mutation(async ({ input, ctx }) => {
+      const employee = await db.getEmployeeByEmail(input.email);
+      if (!employee || !employee.passwordHash) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "E-mail ou senha inválidos" });
+      }
+      if (employee.status !== "ativo") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Conta inativa. Contate o administrador." });
+      }
+      if (!db.verifyPassword(input.password, employee.passwordHash)) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "E-mail ou senha inválidos" });
+      }
+      // Create a session token using the employee's email as openId prefix
+      const openId = `emp_${employee.id}`;
+      // Ensure user record exists in users table
+      let user = await db.getUserByOpenId(openId);
+      if (!user) {
+        await db.upsertUser({
+          openId,
+          name: employee.name,
+          email: employee.email ?? null,
+          loginMethod: "password",
+          role: employee.role === "administrador" ? "admin" : employee.role as "tecnico" | "especialista",
+        });
+        user = await db.getUserByOpenId(openId);
+      } else {
+        // Update role in case it changed
+        await db.upsertUser({
+          openId,
+          name: employee.name,
+          email: employee.email ?? null,
+          role: employee.role === "administrador" ? "admin" : employee.role as "tecnico" | "especialista",
+        });
+      }
+      if (!user) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Falha ao criar sessão" });
+      }
+      // Generate session token and set cookie
+      const token = await sdk.createSessionToken(openId, { name: employee.name });
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: 365 * 24 * 60 * 60 * 1000 });
+      return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
     }),
   }),
 
@@ -94,9 +140,14 @@ export const appRouter = router({
       hireDate: z.number().optional(),
       status: z.enum(["ativo", "inativo"]).default("ativo"),
       photoUrl: z.string().optional(),
+      password: z.string().min(6).optional(),
     })).mutation(async ({ input }) => {
       const data: any = { ...input };
       if (input.hireDate) data.hireDate = new Date(input.hireDate);
+      if (input.password) {
+        data.passwordHash = db.hashPassword(input.password);
+        delete data.password;
+      }
       return db.createEmployee(data);
     }),
     update: adminProcedure.input(z.object({
@@ -110,9 +161,14 @@ export const appRouter = router({
       hireDate: z.number().optional(),
       status: z.enum(["ativo", "inativo"]).optional(),
       photoUrl: z.string().optional(),
+      password: z.string().min(6).optional(),
     })).mutation(async ({ input }) => {
       const { id, ...data }: any = input;
       if (input.hireDate) data.hireDate = new Date(input.hireDate);
+      if (input.password) {
+        data.passwordHash = db.hashPassword(input.password);
+        delete data.password;
+      }
       return db.updateEmployee(id, data);
     }),
     delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {

@@ -112,3 +112,20 @@
 - [x] Atualizar DashboardLayout para mostrar navegação condicional por perfil
 - [x] Gerar e aplicar migration SQL
 - [x] Testes vitest para controle de acesso por perfil
+
+## Fase 13: Login com E-mail e Senha
+- [x] Adicionar campos email e passwordHash à tabela employees no schema
+- [x] Criar procedure de login com e-mail e senha (gerar sessão JWT)
+- [x] Criar procedure de cadastro de técnico/especialista com credenciais (admin apenas)
+- [x] Criar página de login com e-mail e senha
+- [x] Integrar login por e-mail/senha com o fluxo de autenticação existente (OAuth para admin)
+- [x] Permitir que admin cadastre técnico/especialista com e-mail e senha em Configurações
+- [x] Gerar e aplicar migration SQL
+- [x] Testes vitest para login com e-mail e senha
+
+## Fase 14: Foto e Documentos para Técnicos
+- [x] Adicionar upload de foto no formulário de funcionário em Configurações
+- [x] Exibir foto do especialista/técnico nos cards de funcionários
+- [x] Garantir que documentos anexados pelo admin sejam visíveis para técnico/especialista
+- [ ] Adicionar seção "Meus Documentos" na view do técnico/especialista
+- [x] Testes vitest para login com senha e visibilidade de documentos
