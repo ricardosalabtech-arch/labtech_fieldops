@@ -29,7 +29,7 @@ export default function Documentos() {
 
   // Vehicles
   const createVehicle = trpc.vehicles.create.useMutation({
-    onSuccess: () => { utils.vehicles.list.invalidate(); toast.success("Veículo cadastrado!"); setVehicleDialog(false); resetVehicleForm(); },
+    onSuccess: (v) => { utils.vehicles.list.invalidate(); toast.success("Veículo cadastrado! Agora você pode anexar documentos."); setEditingVehicle(v); },
     onError: (e) => toast.error("Erro: " + e.message),
   });
   const updateVehicle = trpc.vehicles.update.useMutation({
@@ -42,7 +42,7 @@ export default function Documentos() {
 
   // Drivers
   const createDriver = trpc.drivers.create.useMutation({
-    onSuccess: () => { utils.drivers.list.invalidate(); toast.success("Condutor cadastrado!"); setDriverDialog(false); resetDriverForm(); },
+    onSuccess: (d) => { utils.drivers.list.invalidate(); toast.success("Condutor cadastrado! Agora você pode anexar documentos."); setEditingDriver(d); },
     onError: (e) => toast.error("Erro: " + e.message),
   });
   const updateDriver = trpc.drivers.update.useMutation({
@@ -145,7 +145,7 @@ export default function Documentos() {
             <LoadingSkeleton type="card" count={3} />
           ) : !vehicles || vehicles.length === 0 ? (
             <Card className="border-0 shadow-sm"><CardContent>
-              <EmptyState icon={Car} title="Nenhum veículo cadastrado" description="Cadastre veículos para uso nas viagens técnicas." />
+              <EmptyState icon={Car} title="Nenhum veículo cadastrado" description="Cadastre veículos para uso nas viagens técnicas. Após cadastrar, você poderá anexar CRLV, seguro e outros documentos ao card do veículo." />
             </CardContent></Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -201,7 +201,7 @@ export default function Documentos() {
             <LoadingSkeleton type="card" count={3} />
           ) : !drivers || drivers.length === 0 ? (
             <Card className="border-0 shadow-sm"><CardContent>
-              <EmptyState icon={User} title="Nenhum condutor cadastrado" description="Cadastre condutores para uso nas viagens técnicas." />
+              <EmptyState icon={User} title="Nenhum condutor cadastrado" description="Cadastre condutores para uso nas viagens técnicas. Após cadastrar, você poderá anexar CNH, exame médico e outros documentos ao card do condutor." />
             </CardContent></Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -360,6 +360,29 @@ export default function Documentos() {
             <div><Label>Vencimento Seguro</Label><Input type="date" value={vForm.insuranceExpiry} onChange={e => setVForm(f => ({ ...f, insuranceExpiry: e.target.value }))} /></div>
             <div><Label>Vencimento Inspeção</Label><Input type="date" value={vForm.inspectionExpiry} onChange={e => setVForm(f => ({ ...f, inspectionExpiry: e.target.value }))} /></div>
           </div>
+          {editingVehicle && (
+            <div className="space-y-3 py-2 border-t mt-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground"><FileCheck className="h-4 w-4" /> Documentos Anexados</div>
+              {veiculoDocs(editingVehicle.id).length > 0 ? (
+                <div className="space-y-2">
+                  {veiculoDocs(editingVehicle.id).map(doc => (
+                    <div key={doc.id} className="flex items-center gap-2 rounded-lg border px-3 py-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate flex-1">{doc.name}</a>
+                      <a href={doc.fileUrl} download className="text-muted-foreground hover:text-primary" aria-label="Baixar"><Download className="h-4 w-4" /></a>
+                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="h-5 w-5 p-0 text-destructive"><Trash2 className="h-2.5 w-2.5" /></Button>} title="Remover documento?" description={`Remover ${doc.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: doc.id })} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Nenhum documento anexado ainda.</p>
+              )}
+              <FileUpload category="veiculo" refId={editingVehicle.id} label="Anexar CRLV, seguro, etc." accept=".pdf,.jpg,.jpeg,.png" />
+            </div>
+          )}
+          {!editingVehicle && (
+            <p className="text-xs text-muted-foreground py-2 border-t mt-2">Após cadastrar o veículo, você poderá anexar documentos (CRLV, seguro, etc.) no card ou ao editar.</p>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setVehicleDialog(false)}>Cancelar</Button>
             <Button onClick={handleVehicleSubmit} disabled={createVehicle.isPending || updateVehicle.isPending}>{editingVehicle ? "Salvar" : "Cadastrar"}</Button>
@@ -381,6 +404,29 @@ export default function Documentos() {
             <div><Label>Email</Label><Input type="email" value={dForm.email} onChange={e => setDForm(f => ({ ...f, email: e.target.value }))} /></div>
             <div className="col-span-2"><Label>Endereço</Label><Input value={dForm.address} onChange={e => setDForm(f => ({ ...f, address: e.target.value }))} /></div>
           </div>
+          {editingDriver && (
+            <div className="space-y-3 py-2 border-t mt-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground"><FileCheck className="h-4 w-4" /> Documentos Anexados</div>
+              {condutorDocs(editingDriver.id).length > 0 ? (
+                <div className="space-y-2">
+                  {condutorDocs(editingDriver.id).map(doc => (
+                    <div key={doc.id} className="flex items-center gap-2 rounded-lg border px-3 py-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate flex-1">{doc.name}</a>
+                      <a href={doc.fileUrl} download className="text-muted-foreground hover:text-primary" aria-label="Baixar"><Download className="h-4 w-4" /></a>
+                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="h-5 w-5 p-0 text-destructive"><Trash2 className="h-2.5 w-2.5" /></Button>} title="Remover documento?" description={`Remover ${doc.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: doc.id })} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Nenhum documento anexado ainda.</p>
+              )}
+              <FileUpload category="condutor" refId={editingDriver.id} label="Anexar CNH, exame médico, etc." accept=".pdf,.jpg,.jpeg,.png" />
+            </div>
+          )}
+          {!editingDriver && (
+            <p className="text-xs text-muted-foreground py-2 border-t mt-2">Após cadastrar o condutor, você poderá anexar documentos (CNH, exame médico, etc.) no card ou ao editar.</p>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDriverDialog(false)}>Cancelar</Button>
             <Button onClick={handleDriverSubmit} disabled={createDriver.isPending || updateDriver.isPending}>{editingDriver ? "Salvar" : "Cadastrar"}</Button>

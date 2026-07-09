@@ -153,3 +153,8 @@
 - [x] Adicionar campo de upload de documento (CNH, exame médico) nos cards de condutor
 - [x] Exibir links de download dos documentos anexados nos cards
 - [x] Permitir visualizar e baixar os documentos anexados
+
+## Fase 18: Anexos no modal de criação/edição
+- [x] Adicionar upload de documento no modal de Novo Veículo (após cadastrar, anexar CRLV/seguro)
+- [x] Adicionar upload de documento no modal de Novo Condutor (após cadastrar, anexar CNH/exame)
+- [x] Garantir que os botões de anexo apareçam mesmo sem veículos cadastrados (instrução visual)
