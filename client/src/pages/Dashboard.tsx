@@ -2,7 +2,7 @@ import { trpc } from "@/lib/trpc";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, CheckCircle2, Clock, DollarSign, Building2, BedDouble, Plus, ArrowRight, Plane, Search, FileText } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, DollarSign, Building2, BedDouble, Plus, ArrowRight, Plane, Search, FileText, Car, TrendingUp } from "lucide-react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -52,7 +52,7 @@ export default function Dashboard() {
     const cats = { transporte: 0, hospedagem: 0, alimentacao: 0, outros: 0 };
     expenses?.forEach(e => { cats[e.category as keyof typeof cats] += parseFloat(e.amount); });
     return [
-      { name: "Transporte", value: cats.transporte, fill: "oklch(0.62 0.19 250)" },
+      { name: "Transporte", value: cats.transporte, fill: "oklch(0.45 0.25 250)" },
       { name: "Hospedagem", value: cats.hospedagem, fill: "oklch(0.70 0.15 180)" },
       { name: "Alimentação", value: cats.alimentacao, fill: "oklch(0.72 0.18 140)" },
       { name: "Outros", value: cats.outros, fill: "oklch(0.75 0.15 80)" },
@@ -71,10 +71,10 @@ export default function Dashboard() {
     { label: "Visitas Hoje", value: stats?.visitsToday ?? 0, icon: Calendar, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "Em Andamento", value: stats?.inProgress ?? 0, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
     { label: "Concluídas", value: stats?.completed ?? 0, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Custos Totais", value: `R$ ${(stats?.totalCosts ?? 0).toFixed(2)}`, icon: DollarSign, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Custos Totais", value: `R$ ${(stats?.totalCosts ?? 0).toFixed(2)}`, icon: DollarSign, color: "text-purple-600", bg: "bg-purple-50" },
     { label: "Clientes", value: stats?.totalClients ?? 0, icon: Building2, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Reservas Ativas", value: stats?.activeReservations ?? 0, icon: BedDouble, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Voos", value: upcomingFlights.length, icon: Plane, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Reservas Ativas", value: stats?.activeReservations ?? 0, icon: BedDouble, color: "text-teal-600", bg: "bg-teal-50" },
+    { label: "Voos", value: upcomingFlights.length, icon: Plane, color: "text-indigo-600", bg: "bg-indigo-50" },
   ];
 
   const quickActions = [
@@ -129,7 +129,7 @@ export default function Dashboard() {
             <CommandGroup heading="Viagens">
               {trips.slice(0, 5).map(t => (
                 <CommandItem key={t.id} onSelect={() => { setSearchOpen(false); setLocation("/viagens"); }}>
-                  <Plane className="mr-2 h-4 w-4" />
+                  <Car className="mr-2 h-4 w-4" />
                   <span>{t.employeeName || "Viagem"} — {format(new Date(t.departureDate), "dd/MM/yyyy")}</span>
                 </CommandItem>
               ))}
@@ -148,21 +148,21 @@ export default function Dashboard() {
         </CommandList>
       </CommandDialog>
 
-      {/* Cards de Resumo */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+      {/* Cards de Resumo — estilo clássico */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         {cards.map((card, i) => (
-          <Card key={i} className="shadow-sm border border-border">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 pt-3 px-4">
-              <CardTitle className="text-xs font-medium text-muted-foreground">
+          <Card key={i} className="border-0 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 {card.label}
               </CardTitle>
-              <div className={`w-8 h-8 rounded-md ${card.bg} flex items-center justify-center shrink-0`}>
+              <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center shrink-0`}>
                 <card.icon className={`h-4 w-4 ${card.color}`} />
               </div>
             </CardHeader>
-            <CardContent className="px-4 pb-3">
-              <div className="text-lg font-bold text-foreground">
-                {isLoading ? <Skeleton className="h-6 w-12" /> : card.value}
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">
+                {isLoading ? <Skeleton className="h-7 w-14" /> : card.value}
               </div>
             </CardContent>
           </Card>
@@ -170,9 +170,9 @@ export default function Dashboard() {
       </div>
 
       {/* Ações Rápidas */}
-      <Card className="shadow-sm border border-border">
+      <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">Ações Rápidas</CardTitle>
+          <CardTitle className="text-base font-semibold">Ações Rápidas</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
@@ -182,7 +182,7 @@ export default function Dashboard() {
                 variant="outline"
                 size="sm"
                 onClick={() => setLocation(action.path)}
-                className="gap-1.5 rounded-md text-xs h-8"
+                className="gap-1.5 rounded-lg text-xs h-8"
               >
                 <action.icon className="h-3.5 w-3.5" />
                 {action.label}
@@ -194,22 +194,22 @@ export default function Dashboard() {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="shadow-sm border border-border lg:col-span-2">
-          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">Visitas e Custos (6 meses)</CardTitle></CardHeader>
+        <Card className="border-0 shadow-sm lg:col-span-2">
+          <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">Visitas e Custos (6 meses)</CardTitle></CardHeader>
           <CardContent>
             <ChartContainer config={{ visits: { label: "Visitas" }, costs: { label: "Custos" } }} className="h-[200px] w-full">
               <BarChart data={chartData}>
                 <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
                 <YAxis tickLine={false} axisLine={false} fontSize={12} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="visits" fill="oklch(0.50 0.20 248)" radius={4} />
+                <Bar dataKey="visits" fill="oklch(0.45 0.25 250)" radius={4} />
                 <Bar dataKey="costs" fill="oklch(0.70 0.15 180)" radius={4} />
               </BarChart>
             </ChartContainer>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border border-border">
-          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">Custos por Categoria</CardTitle></CardHeader>
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">Custos por Categoria</CardTitle></CardHeader>
           <CardContent>
             <ChartContainer config={{ value: { label: "Valor" } }} className="h-[200px] w-full">
               <PieChart>
@@ -224,14 +224,15 @@ export default function Dashboard() {
       </div>
 
       {/* Taxa de Conclusão */}
-      <Card className="shadow-sm border border-border">
-        <CardContent className="pt-6">
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">Taxa de Conclusão de Visitas</CardTitle></CardHeader>
+        <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Taxa de Conclusão de Visitas</p>
+              <p className="text-sm text-muted-foreground">Percentual de visitas concluídas</p>
               <p className="text-3xl font-bold text-foreground mt-1">{completionRate}%</p>
             </div>
-            <div className="w-32 h-32 rounded-full flex items-center justify-center" style={{ background: `conic-gradient(oklch(0.50 0.20 248) ${completionRate}%, oklch(0.90 0.005 250) 0)` }}>
+            <div className="w-32 h-32 rounded-full flex items-center justify-center" style={{ background: `conic-gradient(oklch(0.45 0.25 250) ${completionRate}%, oklch(0.90 0.005 250) 0)` }}>
               <div className="w-24 h-24 rounded-full bg-card flex items-center justify-center">
                 <span className="text-lg font-bold text-foreground">{completionRate}%</span>
               </div>
@@ -241,9 +242,9 @@ export default function Dashboard() {
       </Card>
 
       {/* Próximas Visitas */}
-      <Card className="shadow-sm border border-border">
+      <Card className="border-0 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-sm font-semibold">Próximas Visitas</CardTitle>
+          <CardTitle className="text-base font-semibold">Próximas Visitas</CardTitle>
           <Button variant="ghost" size="sm" onClick={() => setLocation("/agendamentos")} className="text-primary">
             Ver todas <ArrowRight className="ml-1 h-3 w-3" />
           </Button>
@@ -276,7 +277,7 @@ export default function Dashboard() {
                   onClick={() => setLocation("/agendamentos")}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
                       <Calendar className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
@@ -300,93 +301,11 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Monitoramento de Localização (Admin) */}
-      {isAdmin && allVisits && allVisits.some((v: any) => v.latitude && v.longitude) && (
-        <Card className="shadow-sm border border-border">
-          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-blue-600" /> Monitoramento de Localização</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {allVisits.filter((v: any) => v.latitude && v.longitude).slice(0, 10).map((v: any) => (
-                <div key={v.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40">
-                  <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
-                    <Navigation className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{v.clientName}</p>
-                    <p className="text-xs text-muted-foreground">{v.latitude}, {v.longitude}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-xs text-muted-foreground">{v.geoTimestamp ? format(new Date(v.geoTimestamp), "dd/MM HH:mm", { locale: ptBR }) : ""}</p>
-                    <a href={`https://www.waze.com/ul?ll=${v.latitude},${v.longitude}&navigate=yes`} target="_blank" rel="noopener" className="text-xs text-blue-600 hover:underline">Ver no Waze</a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Meus Documentos (Técnico/Especialista) */}
-      {!isAdmin && documents && documents.length > 0 && (
-        <Card className="shadow-sm border border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2"><FileText className="h-4 w-4 text-blue-600" /> Meus Documentos</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => setLocation("/documentos")} className="text-primary">
-              Ver todos <ArrowRight className="ml-1 h-3 w-3" />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {documents.slice(0, 8).map((doc: any) => (
-                <div key={doc.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
-                    <FileText className="h-4 w-4 text-indigo-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{doc.title || doc.fileName || "Documento"}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{doc.category}</p>
-                  </div>
-                  {doc.fileUrl && (
-                    <a href={doc.fileUrl} target="_blank" rel="noopener" className="text-xs text-blue-600 hover:underline shrink-0">Baixar</a>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Histórico de Alterações */}
-      {auditLog && auditLog.length > 0 && (
-        <Card className="shadow-sm border border-border">
-          <CardHeader><CardTitle className="text-sm font-semibold">Histórico de Alterações</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {auditLog.slice(0, 10).map((log: any) => (
-                <div key={log.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                    <Clock className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {log.action === "create" ? "Criou" : log.action === "update" ? "Atualizou" : "Excluiu"} {log.entity}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {log.changedBy} · {format(new Date(log.createdAt), "dd/MM/yyyy HH:mm")}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Próximos Voos */}
       {upcomingFlights.length > 0 && (
-        <Card className="shadow-sm border border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2"><Plane className="h-4 w-4 text-blue-600" /> Próximos Voos</CardTitle>
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2"><Plane className="h-4 w-4 text-indigo-600" /> Próximos Voos</CardTitle>
             <Button variant="ghost" size="sm" onClick={() => setLocation("/viagens")} className="text-primary">
               Ver viagens <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
@@ -409,6 +328,88 @@ export default function Dashboard() {
                       {f.status === "confirmada" ? "Confirmada" : "Pendente"}
                     </span>
                     {f.seat && <p className="text-xs text-muted-foreground mt-1">Assento {f.seat}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Monitoramento de Localização (Admin) */}
+      {isAdmin && allVisits && allVisits.some((v: any) => v.latitude && v.longitude) && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-3"><CardTitle className="text-base font-semibold flex items-center gap-2"><MapPin className="h-4 w-4 text-blue-600" /> Monitoramento de Localização</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {allVisits.filter((v: any) => v.latitude && v.longitude).slice(0, 10).map((v: any) => (
+                <div key={v.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40">
+                  <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+                    <Navigation className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{v.clientName}</p>
+                    <p className="text-xs text-muted-foreground">{v.latitude}, {v.longitude}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs text-muted-foreground">{v.geoTimestamp ? format(new Date(v.geoTimestamp), "dd/MM HH:mm", { locale: ptBR }) : ""}</p>
+                    <a href={`https://www.waze.com/ul?ll=${v.latitude},${v.longitude}&navigate=yes`} target="_blank" rel="noopener" className="text-xs text-blue-600 hover:underline">Ver no Waze</a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Meus Documentos (Técnico/Especialista) */}
+      {!isAdmin && documents && documents.length > 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2"><FileText className="h-4 w-4 text-blue-600" /> Meus Documentos</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => setLocation("/documentos")} className="text-primary">
+              Ver todos <ArrowRight className="ml-1 h-3 w-3" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {documents.slice(0, 8).map((doc: any) => (
+                <div key={doc.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+                    <FileText className="h-4 w-4 text-indigo-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{doc.title || doc.fileName || "Documento"}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{doc.category}</p>
+                  </div>
+                  {doc.fileUrl && (
+                    <a href={doc.fileUrl} target="_blank" rel="noopener" className="text-xs text-blue-600 hover:underline shrink-0">Baixar</a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Histórico de Alterações */}
+      {auditLog && auditLog.length > 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">Histórico de Alterações</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {auditLog.slice(0, 10).map((log: any) => (
+                <div key={log.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                    <Clock className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {log.action === "create" ? "Criou" : log.action === "update" ? "Atualizou" : "Excluiu"} {log.entity}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {log.changedBy} · {format(new Date(log.createdAt), "dd/MM/yyyy HH:mm")}
+                    </p>
                   </div>
                 </div>
               ))}

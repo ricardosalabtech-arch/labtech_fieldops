@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FolderOpen, Plus, Car, User, FileText, Trash2, Pencil, FileCheck, Plane, Upload, Download } from "lucide-react";
+import { FolderOpen, Plus, Car, User, FileText, Trash2, Pencil, FileCheck, Download } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -111,30 +111,20 @@ export default function Documentos() {
     else createDriver.mutate(data);
   }
 
-  const voucherDocs = documents?.filter(d => d.category === "voucher") || [];
-  const passagemDocs = documents?.filter(d => d.category === "passagem") || [];
-  const visitaDocs = documents?.filter(d => d.category === "visita") || [];
-  const clienteDocs = documents?.filter(d => d.category === "cliente") || [];
   const veiculoDocs = (vid?: number) => documents?.filter(d => d.category === "veiculo" && d.refId === vid) || [];
   const condutorDocs = (did?: number) => documents?.filter(d => d.category === "condutor" && d.refId === did) || [];
-  const { data: flights } = trpc.flightBookings.list.useQuery();
-  const { data: hotelReservations } = trpc.hotelReservations.list.useQuery();
-  const { data: visits } = trpc.visits.list.useQuery();
-  const { data: clients } = trpc.clients.list.useQuery();
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-[oklch(0.22_0.02_250)]">Documentos</h1>
-        <p className="text-sm text-muted-foreground">Veículos, Condutores, Vouchers e Passagens</p>
+        <p className="text-sm text-muted-foreground">Veículos e Condutores</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-lg grid-cols-4 overflow-x-auto">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="veiculos" className="gap-1.5"><Car className="h-4 w-4" /> Veículos</TabsTrigger>
           <TabsTrigger value="condutores" className="gap-1.5"><User className="h-4 w-4" /> Condutores</TabsTrigger>
-          <TabsTrigger value="vouchers" className="gap-1.5"><FileText className="h-4 w-4" /> Vouchers</TabsTrigger>
-          <TabsTrigger value="passagens" className="gap-1.5"><Plane className="h-4 w-4" /> Passagens</TabsTrigger>
         </TabsList>
 
         {/* Veículos */}
@@ -250,104 +240,6 @@ export default function Documentos() {
           )}
         </TabsContent>
 
-        {/* Vouchers de Hotel */}
-        <TabsContent value="vouchers" className="space-y-4">
-          <Card className="border-0 shadow-sm bg-muted/30">
-            <CardContent className="py-4">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Upload className="h-4 w-4" /> Anexar Voucher de Hotel</h3>
-              <div className="max-w-md">
-                <FileUpload category="voucher" label="Selecionar arquivo do voucher (PDF, imagem)" accept=".pdf,.jpg,.jpeg,.png" />
-              </div>
-            </CardContent>
-          </Card>
-          {docsLoading ? (
-            <LoadingSkeleton type="card" count={2} />
-          ) : !voucherDocs.length ? (
-            <Card className="border-0 shadow-sm"><CardContent>
-              <EmptyState icon={FileText} title="Nenhum voucher cadastrado" description="Use o campo acima para anexar vouchers de hotel." />
-            </CardContent></Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {voucherDocs.map(d => (
-                <Card key={d.id} className="border-0 shadow-sm">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center"><FileCheck className="h-5 w-5 text-teal-600" /></div>
-                      <div><CardTitle className="text-sm font-semibold">{d.name}</CardTitle><p className="text-xs text-muted-foreground">{format(new Date(d.createdAt), "dd/MM/yyyy", { locale: ptBR })}</p></div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Abrir documento</a>
-                    <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive ml-2"><Trash2 className="h-3 w-3" /></Button>} title="Remover documento?" description={`Remover ${d.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: d.id })} />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Passagens de Voo */}
-        <TabsContent value="passagens" className="space-y-4">
-          <Card className="border-0 shadow-sm bg-muted/30">
-            <CardContent className="py-4">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Upload className="h-4 w-4" /> Anexar Voucher de Passagem Aérea</h3>
-              <div className="max-w-md">
-                <FileUpload category="passagem" label="Selecionar arquivo da passagem (PDF, imagem)" accept=".pdf,.jpg,.jpeg,.png" />
-              </div>
-            </CardContent>
-          </Card>
-          {!flights || flights.length === 0 ? (
-            <Card className="border-0 shadow-sm"><CardContent>
-              <EmptyState icon={Plane} title="Nenhuma passagem cadastrada" description="As passagens são adicionadas nas Viagens. Use o campo acima para anexar vouchers." />
-            </CardContent></Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {flights.map(f => (
-                <Card key={f.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center"><Plane className="h-5 w-5 text-indigo-600" /></div>
-                      <div>
-                        <CardTitle className="text-sm font-semibold">{f.airline} · {f.flightNumber}</CardTitle>
-                        <p className="text-xs text-muted-foreground">{f.originAirport} → {f.destinationAirport}</p>
-                      </div>
-                    </div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${f.status === "confirmada" ? "bg-green-100 text-green-700" : f.status === "cancelada" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
-                      {f.status === "confirmada" ? "Confirmada" : f.status === "cancelada" ? "Cancelada" : "Pendente"}
-                    </span>
-                  </CardHeader>
-                  <CardContent className="space-y-1 text-sm text-muted-foreground">
-                    <p>Partida: {format(new Date(f.departureDateTime), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
-                    {f.arrivalDateTime && <p>Chegada: {format(new Date(f.arrivalDateTime), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>}
-                    {f.passengerName && <p>Passageiro: {f.passengerName}</p>}
-                    {f.seat && <p>Assento: {f.seat}</p>}
-                    {f.bookingCode && <p>Código: {f.bookingCode}</p>}
-                    <div className="flex items-center gap-1.5 font-medium text-foreground pt-1">R$ {Number(f.value).toFixed(2)}</div>
-                    {f.voucherUrl && <a href={f.voucherUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block pt-1">Ver voucher do voo</a>}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-          {passagemDocs.length > 0 && (
-            <div className="space-y-2 pt-4 border-t">
-              <h3 className="text-sm font-semibold text-muted-foreground">Documentos de Passagens Anexados</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {passagemDocs.map(d => (
-                  <Card key={d.id} className="border-0 shadow-sm">
-                    <CardContent className="flex items-center justify-between py-3">
-                      <div className="flex items-center gap-2">
-                        <FileCheck className="h-4 w-4 text-indigo-600" />
-                        <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate">{d.name}</a>
-                      </div>
-                      <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover documento?" description={`Remover ${d.name}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDoc.mutate({ id: d.id })} />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-        </TabsContent>
       </Tabs>
 
       {/* Dialog Veículo */}
