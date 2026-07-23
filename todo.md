@@ -239,3 +239,9 @@
 - [x] Remover menu Viagens do DashboardLayout e rota /viagens do App.tsx
 - [x] Atualizar links de "Nova Viagem" e "Próximos Voos" no Dashboard.tsx para /agendamentos
 - [x] Salvar checkpoint e testar
+
+## Fase 27: Correção de OAuth e WebSocket HMR
+
+- [x] Reverter const.ts para usar window.location.origin como redirect_uri (seguindo spec oficial do Manus OAuth)
+- [x] Desativar HMR no Vite (hmr: false) para eliminar erro de WebSocket no preview
+- [ ] Salvar checkpoint e verificar funcionamento no preview e produção

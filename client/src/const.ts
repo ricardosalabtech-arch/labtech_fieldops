@@ -12,16 +12,17 @@ export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 // call would desync it from an in-flight login and the callback would reject it
 // with "invalid oauth state". It returns void by design, so there is no URL to
 // stash across renders.
+//
+// Per the Manus OAuth spec, we MUST always use window.location.origin as the
+// redirect_uri. The OAuth app is registered with the production domain
+// (labtechops-mvwgzfhu.manus.space) and the Manus platform automatically
+// allows the ephemeral dev preview domains (*.manus.computer) as valid
+// redirect targets. Hardcoding a production domain would break the nonce
+// cookie validation because __Host- cookies are host-only.
 export const startLogin = () => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
-  // Use the production domain for OAuth redirect_uri to avoid rejection on
-  // ephemeral dev-server hostnames. Fall back to window.location.origin only
-  // if no production domain is configured.
-  const productionOrigin = "https://labtechops-mvwgzfhu.manus.space";
-  const isDevPreview = window.location.hostname.endsWith(".manus.computer");
-  const redirectOrigin = isDevPreview ? productionOrigin : window.location.origin;
-  const redirectUri = `${redirectOrigin}/api/oauth/callback`;
+  const redirectUri = `${window.location.origin}/api/oauth/callback`;
 
   const nonce = crypto.randomUUID();
   document.cookie = `${OAUTH_STATE_COOKIE}=${nonce}; Path=/; Max-Age=600; SameSite=None; Secure`;
