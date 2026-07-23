@@ -196,3 +196,11 @@
 - [x] Tornar checklists de ferramentas e carro exclusivos da equipe (esconder para admin)
 - [x] Atualizar App.tsx: admin → Dashboard atual, equipe → DashboardViagem
 - [x] Salvar checkpoint e testar
+
+## Fase 23: Campo CEP no Cadastro
+
+- [x] Adicionar campo zipCode no schema (clients, employees, drivers)
+- [x] Aplicar migration SQL (ALTER TABLE ADD COLUMN zipCode)
+- [x] Adicionar campo CEP no formulário de Cliente (Cadastro.tsx)
+- [x] Adicionar campo CEP no formulário de Equipe (Cadastro.tsx)
+- [x] Build e testes passando (35/35)

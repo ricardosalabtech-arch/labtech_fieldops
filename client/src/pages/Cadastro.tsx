@@ -81,12 +81,12 @@ function ClientesTab({ isAdmin }: { isAdmin: boolean }) {
   });
 
   const [form, setForm] = useState({
-    companyName: "", cnpj: "", address: "", city: "", state: "",
+    companyName: "", cnpj: "", zipCode: "", address: "", city: "", state: "",
     responsibleName: "", responsibleEmail: "", phone: "", notes: "",
   });
 
   function resetForm() {
-    setForm({ companyName: "", cnpj: "", address: "", city: "", state: "", responsibleName: "", responsibleEmail: "", phone: "", notes: "" });
+    setForm({ companyName: "", cnpj: "", zipCode: "", address: "", city: "", state: "", responsibleName: "", responsibleEmail: "", phone: "", notes: "" });
     setEditingClient(null);
   }
 
@@ -95,7 +95,7 @@ function ClientesTab({ isAdmin }: { isAdmin: boolean }) {
   function openEdit(c: any) {
     setEditingClient(c);
     setForm({
-      companyName: c.companyName || "", cnpj: c.cnpj || "", address: c.address || "",
+      companyName: c.companyName || "", cnpj: c.cnpj || "", zipCode: c.zipCode || "", address: c.address || "",
       city: c.city || "", state: c.state || "", responsibleName: c.responsibleName || "",
       responsibleEmail: c.responsibleEmail || "", phone: c.phone || "", notes: c.notes || "",
     });
@@ -161,6 +161,7 @@ function ClientesTab({ isAdmin }: { isAdmin: boolean }) {
           <div className="grid grid-cols-2 gap-4 py-2">
             <div className="col-span-2"><Label>Empresa *</Label><Input value={form.companyName} onChange={e => setForm(f => ({ ...f, companyName: e.target.value }))} placeholder="Nome da empresa" /></div>
             <div><Label>CNPJ</Label><Input value={form.cnpj} onChange={e => setForm(f => ({ ...f, cnpj: e.target.value }))} placeholder="00.000.000/0000-00" /></div>
+            <div><Label>CEP</Label><Input value={form.zipCode} onChange={e => setForm(f => ({ ...f, zipCode: e.target.value }))} placeholder="00000-000" maxLength={10} /></div>
             <div><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="(00) 0000-0000" /></div>
             <div className="col-span-2"><Label>Endereço</Label><Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Endereço completo" /></div>
             <div><Label>Cidade</Label><Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} /></div>
@@ -225,14 +226,14 @@ function EquipeTab() {
   });
 
   const [empForm, setEmpForm] = useState({
-    name: "", email: "", phone: "", position: "", department: "",
+    name: "", email: "", phone: "", zipCode: "", position: "", department: "",
     hireDate: "", status: "ativo", role: "tecnico", password: "", photoUrl: "",
     // Campos migrados de condutores
     cpf: "", cnhNumber: "", cnhCategory: "", cnhExpiry: "", bloodType: "", address: "",
   });
 
   function resetEmpForm() {
-    setEmpForm({ name: "", email: "", phone: "", position: "", department: "", hireDate: "", status: "ativo", role: "tecnico", password: "", photoUrl: "", cpf: "", cnhNumber: "", cnhCategory: "", cnhExpiry: "", bloodType: "", address: "" });
+    setEmpForm({ name: "", email: "", phone: "", zipCode: "", position: "", department: "", hireDate: "", status: "ativo", role: "tecnico", password: "", photoUrl: "", cpf: "", cnhNumber: "", cnhCategory: "", cnhExpiry: "", bloodType: "", address: "" });
     setEditingEmp(null);
   }
 
@@ -241,6 +242,7 @@ function EquipeTab() {
     const d = e.driver;
     setEmpForm({
       name: e.name || "", email: e.email || "", phone: e.phone || "",
+      zipCode: e.zipCode || d?.zipCode || "",
       position: e.position || "", department: e.department || "",
       hireDate: e.hireDate ? format(new Date(e.hireDate), "yyyy-MM-dd") : "",
       status: e.status || "ativo", role: e.role || "tecnico", password: "",
@@ -259,6 +261,7 @@ function EquipeTab() {
 
     const data: any = {
       name: empForm.name, email: empForm.email || undefined, phone: empForm.phone || undefined,
+      zipCode: empForm.zipCode || undefined,
       role: empForm.role, position: empForm.position || undefined, department: empForm.department || undefined,
       hireDate: empForm.hireDate ? new Date(empForm.hireDate + "T00:00:00").getTime() : undefined,
       status: empForm.status,
@@ -274,6 +277,7 @@ function EquipeTab() {
       cnhCategory: empForm.cnhCategory || undefined,
       cnhExpiry: empForm.cnhExpiry ? new Date(empForm.cnhExpiry + "T00:00:00").getTime() : undefined,
       bloodType: empForm.bloodType || undefined,
+      zipCode: empForm.zipCode || undefined,
       address: empForm.address || undefined,
       email: empForm.email || undefined,
     };
@@ -365,6 +369,7 @@ function EquipeTab() {
             <div className="col-span-2"><Label>Nome *</Label><Input value={empForm.name} onChange={e => setEmpForm(f => ({ ...f, name: e.target.value }))} /></div>
             <div><Label>Email</Label><Input type="email" value={empForm.email} onChange={e => setEmpForm(f => ({ ...f, email: e.target.value }))} /></div>
             <div><Label>Telefone</Label><Input value={empForm.phone} onChange={e => setEmpForm(f => ({ ...f, phone: e.target.value }))} /></div>
+            <div><Label>CEP</Label><Input value={empForm.zipCode} onChange={e => setEmpForm(f => ({ ...f, zipCode: e.target.value }))} placeholder="00000-000" maxLength={10} /></div>
             <div><Label>Cargo</Label><Input value={empForm.position} onChange={e => setEmpForm(f => ({ ...f, position: e.target.value }))} placeholder="Técnico, Analista..." /></div>
             <div><Label>Departamento</Label><Input value={empForm.department} onChange={e => setEmpForm(f => ({ ...f, department: e.target.value }))} /></div>
             <div><Label>Perfil de Acesso *</Label>
@@ -399,6 +404,7 @@ function EquipeTab() {
             <div><Label>Categoria CNH</Label><Input value={empForm.cnhCategory} onChange={e => setEmpForm(f => ({ ...f, cnhCategory: e.target.value }))} maxLength={4} placeholder="AB, B, etc." /></div>
             <div><Label>Validade CNH</Label><Input type="date" value={empForm.cnhExpiry} onChange={e => setEmpForm(f => ({ ...f, cnhExpiry: e.target.value }))} /></div>
             <div><Label>Tipo Sanguíneo</Label><Input value={empForm.bloodType} onChange={e => setEmpForm(f => ({ ...f, bloodType: e.target.value }))} maxLength={5} placeholder="O+, A-, etc." /></div>
+            <div><Label>CEP (Residencial)</Label><Input value={empForm.zipCode} onChange={e => setEmpForm(f => ({ ...f, zipCode: e.target.value }))} placeholder="00000-000" maxLength={10} /></div>
             <div className="col-span-2"><Label>Endereço</Label><Input value={empForm.address} onChange={e => setEmpForm(f => ({ ...f, address: e.target.value }))} placeholder="Endereço completo" /></div>
           </div>
           <DialogFooter>
