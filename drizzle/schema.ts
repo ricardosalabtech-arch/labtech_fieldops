@@ -282,3 +282,19 @@ export const auditLog = mysqlTable("auditLog", {
 
 export type AuditLog = typeof auditLog.$inferSelect;
 export type InsertAuditLog = typeof auditLog.$inferInsert;
+
+// ─── Log de Sincronização com salabtech.com ─────────────────
+export const syncLog = mysqlTable("syncLog", {
+  id: int("id").autoincrement().primaryKey(),
+  visitId: int("visitId"),
+  direction: mysqlEnum("direction", ["push", "pull"]).notNull(),
+  action: varchar("action", { length: 50 }).notNull(), // create, update, status_update
+  status: mysqlEnum("status", ["success", "error", "pending"]).default("pending").notNull(),
+  payload: text("payload"), // JSON of sent/received data
+  response: text("response"), // JSON of response
+  errorMessage: text("errorMessage"),
+  syncedAt: timestamp("syncedAt").defaultNow().notNull(),
+});
+
+export type SyncLog = typeof syncLog.$inferSelect;
+export type InsertSyncLog = typeof syncLog.$inferInsert;

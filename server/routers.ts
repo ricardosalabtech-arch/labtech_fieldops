@@ -8,6 +8,8 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
 import { storagePut } from "./storage";
+import { pushVisitToSalabtech, pushStatusToSalabtech, getSyncHistory } from "./sync";
+import { createHeartbeatJob, updateHeartbeatJob, listHeartbeatJobs } from "./_core/heartbeat";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Acesso restrito a administradores" });
@@ -274,6 +276,12 @@ export const appRouter = router({
           console.warn("[Visits] Failed to send notification:", e);
         }
       }
+      // Push automático para salabtech.com
+      try {
+        await pushVisitToSalabtech(result);
+      } catch (e) {
+        console.warn("[Visits] Sync to salabtech.com failed:", e);
+      }
       return result;
     }),
     update: protectedProcedure.input(z.object({
@@ -306,12 +314,24 @@ export const appRouter = router({
         if (data.notes !== undefined) allowed.notes = data.notes;
         if (Object.keys(allowed).length === 0) throw new TRPCError({ code: "FORBIDDEN", message: "Técnicos só podem alterar status e notas da visita" });
         await db.createAuditLog({ entity: "visit", entityId: id, action: "update_status", changedBy: ctx.user.name, changes: JSON.stringify(allowed) });
-        return db.updateVisit(id, allowed as any);
+        const updated = await db.updateVisit(id, allowed as any);
+        // Push status update to salabtech.com
+        if (allowed.status) {
+          try { await pushStatusToSalabtech(id, allowed.status); } catch (e) { console.warn("[Visits] Status sync failed:", e); }
+        }
+        return updated;
       }
       if (data.visitDate) data.visitDate = new Date(data.visitDate) as any;
       if (data.endDate) data.endDate = new Date(data.endDate) as any;
       await db.createAuditLog({ entity: "visit", entityId: id, action: "update", changedBy: ctx.user.name, changes: JSON.stringify(data) });
-      return db.updateVisit(id, data as any);
+      const updated = await db.updateVisit(id, data as any);
+      // Push full visit update to salabtech.com
+      try { await pushVisitToSalabtech(updated); } catch (e) { console.warn("[Visits] Sync to salabtech.com failed:", e); }
+      // Also push status update if status changed
+      if (data.status) {
+        try { await pushStatusToSalabtech(id, data.status); } catch (e) { console.warn("[Visits] Status sync failed:", e); }
+      }
+      return updated;
     }),
     delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await db.deleteVisit(input.id);
@@ -802,6 +822,64 @@ export const appRouter = router({
       endDate: z.number(),
     })).query(async ({ input }) => {
       return db.getReportData(new Date(input.startDate), new Date(input.endDate));
+    }),
+  }),
+
+  // ─── Sync (sincronização com salabtech.com) ────────────────
+  sync: router({
+    history: adminProcedure.input(z.object({ limit: z.number().optional() }).optional()).query(async ({ input }) => {
+      return getSyncHistory(input?.limit ?? 50);
+    }),
+    status: adminProcedure.query(async () => {
+      // Check if heartbeat job exists
+      try {
+        const jobs = await listHeartbeatJobs("");
+        const syncJob = jobs.jobs.find(j => j.name === "sync-salabtech");
+        return {
+          enabled: syncJob?.isEnable ?? false,
+          cron: syncJob?.cronExpression ?? "0 0 * * * *",
+          lastExecuted: syncJob?.lastExecutedAt ?? null,
+          nextExecution: syncJob?.nextExecutionAt ?? null,
+        };
+      } catch {
+        return { enabled: false, cron: "0 0 * * * *", lastExecuted: null, nextExecution: null };
+      }
+    }),
+    toggleHeartbeat: adminProcedure.input(z.object({ enable: z.boolean() })).mutation(async ({ input }) => {
+      try {
+        const jobs = await listHeartbeatJobs("");
+        const syncJob = jobs.jobs.find(j => j.name === "sync-salabtech");
+        if (syncJob) {
+          await updateHeartbeatJob(syncJob.taskUid, { enable: input.enable }, "");
+        } else if (input.enable) {
+          await createHeartbeatJob({
+            name: "sync-salabtech",
+            cron: "0 0 * * * *", // Every hour at minute 0
+            path: "/api/scheduled/sync-salabtech",
+            method: "POST",
+            description: "Sincronização periódica de visitas com salabtech.com",
+          }, "");
+        }
+        return { success: true, enabled: input.enable };
+      } catch (e: any) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: String(e?.message || e) });
+      }
+    }),
+    pushAll: adminProcedure.mutation(async () => {
+      // Push all visits to salabtech.com (manual full sync)
+      const allVisits = await db.getVisits();
+      const results: any[] = [];
+      for (const visit of allVisits) {
+        if (visit.status === "agendado" || visit.status === "em_andamento") {
+          try {
+            const result = await pushVisitToSalabtech(visit);
+            results.push({ visitId: visit.id, ...result });
+          } catch (e: any) {
+            results.push({ visitId: visit.id, success: false, error: String(e?.message || e) });
+          }
+        }
+      }
+      return { total: allVisits.length, pushed: results.filter(r => r.success).length, results };
     }),
   }),
 });

@@ -245,3 +245,13 @@
 - [x] Reverter const.ts para usar window.location.origin como redirect_uri (seguindo spec oficial do Manus OAuth)
 - [x] Desativar HMR no Vite (hmr: false) para eliminar erro de WebSocket no preview
 - [x] Salvar checkpoint e verificar funcionamento no preview e produção
+
+## Fase 28: Sincronização de Agendas com salabtech.com
+
+- [x] Tabela syncLog criada no schema e no banco
+- [x] Funções de syncLog no db.ts
+- [x] Push automático: FieldOps → salabtech.com quando visita é criada/atualizada
+- [x] Pull: salabtech.com → FieldOps quando status de OS muda
+- [x] Página de gestão de sincronização no FieldOps
+- [x] Sync periódica via heartbeat
+- [x] Testes e checkpoint

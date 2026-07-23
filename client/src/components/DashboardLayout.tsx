@@ -27,7 +27,7 @@ import { useIsMobile } from "@/hooks/useMobile";
 import {
   LayoutDashboard, Calendar, Building2, BedDouble,
   FolderOpen, ClipboardCheck, FileText, Settings, LogOut,
-  PanelLeft, ShieldCheck, ChevronRight,
+  PanelLeft, ShieldCheck, ChevronRight, RefreshCw,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -43,6 +43,7 @@ const allMenuItems = [
   { icon: ClipboardCheck, label: "Revisão de Custos", path: "/custos", roles: ["admin", "tecnico", "especialista", "user"], section: "recursos" },
   { icon: FileText, label: "Relatórios", path: "/relatorios", roles: ["admin"], section: "gestao" },
   { icon: Settings, label: "Configurações", path: "/configuracoes", roles: ["admin"], section: "gestao" },
+  { icon: RefreshCw, label: "Sincronização", path: "/sync", roles: ["admin"], section: "gestao" },
 ];
 
 const sectionLabels: Record<string, string> = {

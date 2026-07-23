@@ -15,6 +15,7 @@ import {
   InsertChecklist, checklists,
   InsertVisitEquipment, visitEquipment,
   InsertAuditLog, auditLog,
+  InsertSyncLog, syncLog,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { createHash, randomBytes } from 'crypto';
@@ -615,4 +616,20 @@ export async function createAuditLog(data: InsertAuditLog) {
   const db = await getDb();
   if (!db) return;
   await db.insert(auditLog).values(data);
+}
+
+// ─── Sync Log (sincronização com salabtech.com) ─────────────
+export async function getSyncLogs(limit?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  if (limit) {
+    return db.select().from(syncLog).orderBy(desc(syncLog.syncedAt)).limit(limit);
+  }
+  return db.select().from(syncLog).orderBy(desc(syncLog.syncedAt));
+}
+
+export async function createSyncLog(data: InsertSyncLog) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(syncLog).values(data);
 }

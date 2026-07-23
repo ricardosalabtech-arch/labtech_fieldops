@@ -9,6 +9,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import * as db from "../db";
+import { pushVisitToSalabtech } from "../sync";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -129,6 +130,29 @@ async function startServer() {
     }
   });
   // ─────────────────────────────────────────────────────────────────────────────
+  // ─── Scheduled sync: push active visits to salabtech.com ────────────────
+  app.post("/api/scheduled/sync-salabtech", async (_req, res) => {
+    try {
+      const allVisits = await db.getVisits();
+      const activeVisits = allVisits.filter(v => v.status === "agendado" || v.status === "em_andamento");
+      let pushed = 0;
+      let errors = 0;
+      for (const visit of activeVisits) {
+        try {
+          const result = await pushVisitToSalabtech(visit);
+          if (result.success) pushed++;
+          else errors++;
+        } catch {
+          errors++;
+        }
+      }
+      res.json({ ok: true, total: activeVisits.length, pushed, errors, syncedAt: new Date().toISOString() });
+    } catch (error) {
+      console.error("[Scheduled] Sync error:", error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

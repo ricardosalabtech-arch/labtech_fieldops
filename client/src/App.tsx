@@ -12,8 +12,9 @@ import Cadastro from "@/pages/Cadastro";
 import Reservas from "./pages/Reservas";
 import Documentos from "./pages/Documentos";
 import Custos from "./pages/Custos";
-import Relatorios from "./pages/Relatorios";
-import Configuracoes from "./pages/Configuracoes";
+import Relatorios from "@/pages/Relatorios";
+import Configuracoes from "@/pages/Configuracoes";
+import Sync from "@/pages/Sync";
 import { useAuth } from "./_core/hooks/useAuth";
 
 function DashboardRedirect() {
@@ -40,6 +41,7 @@ function Router() {
             <Route path={"/custos"} component={Custos} />
             <Route path={"/relatorios"} component={Relatorios} />
             <Route path={"/configuracoes"} component={Configuracoes} />
+            <Route path={"/sync"} component={Sync} />
             <Route component={DashboardRedirect} />
           </Switch>
         </DashboardLayout>
