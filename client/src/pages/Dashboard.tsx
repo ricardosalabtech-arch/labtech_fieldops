@@ -68,13 +68,13 @@ export default function Dashboard() {
   const upcomingFlights = flights?.filter(f => new Date(f.departureDateTime) >= new Date() && f.status !== "cancelada").slice(0, 3) || [];
 
   const cards = [
-    { label: "Visitas Hoje", value: stats?.visitsToday ?? 0, icon: Calendar, color: "text-indigo-600", bg: "bg-indigo-50 dark:bg-indigo-500/10" },
-    { label: "Em Andamento", value: stats?.inProgress ?? 0, icon: Clock, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-500/10" },
-    { label: "Concluídas", value: stats?.completed ?? 0, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
-    { label: "Custos Totais", value: `R$ ${(stats?.totalCosts ?? 0).toFixed(2)}`, icon: DollarSign, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-500/10" },
-    { label: "Clientes", value: stats?.totalClients ?? 0, icon: Building2, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-500/10" },
-    { label: "Reservas Ativas", value: stats?.activeReservations ?? 0, icon: BedDouble, color: "text-teal-600", bg: "bg-teal-50 dark:bg-teal-500/10" },
-    { label: "Voos", value: upcomingFlights.length, icon: Plane, color: "text-sky-600", bg: "bg-sky-50 dark:bg-sky-500/10" },
+    { label: "Visitas Hoje", value: stats?.visitsToday ?? 0, icon: Calendar, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Em Andamento", value: stats?.inProgress ?? 0, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "Concluídas", value: stats?.completed ?? 0, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Custos Totais", value: `R$ ${(stats?.totalCosts ?? 0).toFixed(2)}`, icon: DollarSign, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Clientes", value: stats?.totalClients ?? 0, icon: Building2, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Reservas Ativas", value: stats?.activeReservations ?? 0, icon: BedDouble, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Voos", value: upcomingFlights.length, icon: Plane, color: "text-blue-600", bg: "bg-blue-50" },
   ];
 
   const quickActions = [
@@ -151,17 +151,17 @@ export default function Dashboard() {
       {/* Cards de Resumo */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         {cards.map((card, i) => (
-          <Card key={i} className="border-0 shadow-soft card-hover">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
-              <CardTitle className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+          <Card key={i} className="shadow-sm border border-border">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 pt-3 px-4">
+              <CardTitle className="text-xs font-medium text-muted-foreground">
                 {card.label}
               </CardTitle>
-              <div className={`w-7 h-7 rounded-md ${card.bg} flex items-center justify-center shrink-0`}>
-                <card.icon className={`h-3.5 w-3.5 ${card.color}`} />
+              <div className={`w-8 h-8 rounded-md ${card.bg} flex items-center justify-center shrink-0`}>
+                <card.icon className={`h-4 w-4 ${card.color}`} />
               </div>
             </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <div className="text-xl font-bold text-foreground tracking-tight">
+            <CardContent className="px-4 pb-3">
+              <div className="text-lg font-bold text-foreground">
                 {isLoading ? <Skeleton className="h-6 w-12" /> : card.value}
               </div>
             </CardContent>
@@ -170,9 +170,9 @@ export default function Dashboard() {
       </div>
 
       {/* Ações Rápidas */}
-      <Card className="border-0 shadow-soft">
+      <Card className="shadow-sm border border-border">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold tracking-tight">Ações Rápidas</CardTitle>
+          <CardTitle className="text-sm font-semibold">Ações Rápidas</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
@@ -194,22 +194,22 @@ export default function Dashboard() {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-soft lg:col-span-2">
-          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold tracking-tight">Visitas e Custos (6 meses)</CardTitle></CardHeader>
+        <Card className="shadow-sm border border-border lg:col-span-2">
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">Visitas e Custos (6 meses)</CardTitle></CardHeader>
           <CardContent>
             <ChartContainer config={{ visits: { label: "Visitas" }, costs: { label: "Custos" } }} className="h-[200px] w-full">
               <BarChart data={chartData}>
                 <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
                 <YAxis tickLine={false} axisLine={false} fontSize={12} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="visits" fill="oklch(0.62 0.19 250)" radius={4} />
+                <Bar dataKey="visits" fill="oklch(0.50 0.20 248)" radius={4} />
                 <Bar dataKey="costs" fill="oklch(0.70 0.15 180)" radius={4} />
               </BarChart>
             </ChartContainer>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-soft">
-          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold tracking-tight">Custos por Categoria</CardTitle></CardHeader>
+        <Card className="shadow-sm border border-border">
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">Custos por Categoria</CardTitle></CardHeader>
           <CardContent>
             <ChartContainer config={{ value: { label: "Valor" } }} className="h-[200px] w-full">
               <PieChart>
@@ -224,14 +224,14 @@ export default function Dashboard() {
       </div>
 
       {/* Taxa de Conclusão */}
-      <Card className="border-0 shadow-soft">
+      <Card className="shadow-sm border border-border">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Taxa de Conclusão de Visitas</p>
               <p className="text-3xl font-bold text-foreground mt-1">{completionRate}%</p>
             </div>
-            <div className="w-32 h-32 rounded-full flex items-center justify-center" style={{ background: `conic-gradient(oklch(0.62 0.19 250) ${completionRate}%, oklch(0.90 0.005 250) 0)` }}>
+            <div className="w-32 h-32 rounded-full flex items-center justify-center" style={{ background: `conic-gradient(oklch(0.50 0.20 248) ${completionRate}%, oklch(0.90 0.005 250) 0)` }}>
               <div className="w-24 h-24 rounded-full bg-card flex items-center justify-center">
                 <span className="text-lg font-bold text-foreground">{completionRate}%</span>
               </div>
@@ -241,9 +241,9 @@ export default function Dashboard() {
       </Card>
 
       {/* Próximas Visitas */}
-      <Card className="border-0 shadow-soft">
+      <Card className="shadow-sm border border-border">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-sm font-semibold tracking-tight">Próximas Visitas</CardTitle>
+          <CardTitle className="text-sm font-semibold">Próximas Visitas</CardTitle>
           <Button variant="ghost" size="sm" onClick={() => setLocation("/agendamentos")} className="text-primary">
             Ver todas <ArrowRight className="ml-1 h-3 w-3" />
           </Button>
@@ -302,8 +302,8 @@ export default function Dashboard() {
 
       {/* Monitoramento de Localização (Admin) */}
       {isAdmin && allVisits && allVisits.some((v: any) => v.latitude && v.longitude) && (
-        <Card className="border-0 shadow-soft">
-          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold tracking-tight flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-indigo-500" /> Monitoramento de Localização</CardTitle></CardHeader>
+        <Card className="shadow-sm border border-border">
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-blue-600" /> Monitoramento de Localização</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {allVisits.filter((v: any) => v.latitude && v.longitude).slice(0, 10).map((v: any) => (
@@ -328,9 +328,9 @@ export default function Dashboard() {
 
       {/* Meus Documentos (Técnico/Especialista) */}
       {!isAdmin && documents && documents.length > 0 && (
-        <Card className="border-0 shadow-sm">
+        <Card className="shadow-sm border border-border">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base font-semibold flex items-center gap-2"><FileText className="h-4 w-4 text-indigo-600" /> Meus Documentos</CardTitle>
+            <CardTitle className="text-sm font-semibold flex items-center gap-2"><FileText className="h-4 w-4 text-blue-600" /> Meus Documentos</CardTitle>
             <Button variant="ghost" size="sm" onClick={() => setLocation("/documentos")} className="text-primary">
               Ver todos <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
@@ -358,8 +358,8 @@ export default function Dashboard() {
 
       {/* Histórico de Alterações */}
       {auditLog && auditLog.length > 0 && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base font-semibold">Histórico de Alterações</CardTitle></CardHeader>
+        <Card className="shadow-sm border border-border">
+          <CardHeader><CardTitle className="text-sm font-semibold">Histórico de Alterações</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {auditLog.slice(0, 10).map((log: any) => (
@@ -384,9 +384,9 @@ export default function Dashboard() {
 
       {/* Próximos Voos */}
       {upcomingFlights.length > 0 && (
-        <Card className="border-0 shadow-sm">
+        <Card className="shadow-sm border border-border">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base font-semibold flex items-center gap-2"><Plane className="h-4 w-4 text-indigo-600" /> Próximos Voos</CardTitle>
+            <CardTitle className="text-sm font-semibold flex items-center gap-2"><Plane className="h-4 w-4 text-blue-600" /> Próximos Voos</CardTitle>
             <Button variant="ghost" size="sm" onClick={() => setLocation("/viagens")} className="text-primary">
               Ver viagens <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
