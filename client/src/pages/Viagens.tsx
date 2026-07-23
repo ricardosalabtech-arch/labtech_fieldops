@@ -269,7 +269,7 @@ export default function Viagens() {
                     <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                       <TransportBadge mode={t.transportMode} />
                       {visit && <WazeLink address={visit.address} city={visit.city} />}
-                      <Button variant="ghost" size="sm" aria-label="Editar" onClick={() => openEdit(t)} className="h-7 w-7 p-0"><Pencil className="h-3.5 w-3.5" /></Button>
+                      {isAdmin && <Button variant="ghost" size="sm" aria-label="Editar" onClick={() => openEdit(t)} className="h-7 w-7 p-0"><Pencil className="h-3.5 w-3.5" /></Button>}
                       {isAdmin && <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="h-7 w-7 p-0 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>} title="Remover viagem?" description={`Remover a viagem de ${t.employeeName || "sem responsável"}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteTrip.mutate({ id: t.id })} />}
                     </div>
                   </div>

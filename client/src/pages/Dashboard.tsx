@@ -68,13 +68,13 @@ export default function Dashboard() {
   const upcomingFlights = flights?.filter(f => new Date(f.departureDateTime) >= new Date() && f.status !== "cancelada").slice(0, 3) || [];
 
   const cards = [
-    { label: "Visitas Hoje", value: stats?.visitsToday ?? 0, icon: Calendar, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Em Andamento", value: stats?.inProgress ?? 0, icon: Clock, color: "text-orange-600", bg: "bg-orange-50" },
-    { label: "Concluídas", value: stats?.completed ?? 0, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
-    { label: "Custos Totais", value: `R$ ${(stats?.totalCosts ?? 0).toFixed(2)}`, icon: DollarSign, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "Clientes", value: stats?.totalClients ?? 0, icon: Building2, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { label: "Reservas Ativas", value: stats?.activeReservations ?? 0, icon: BedDouble, color: "text-teal-600", bg: "bg-teal-50" },
-    { label: "Voos", value: upcomingFlights.length, icon: Plane, color: "text-sky-600", bg: "bg-sky-50" },
+    { label: "Visitas Hoje", value: stats?.visitsToday ?? 0, icon: Calendar, color: "text-indigo-600", bg: "bg-indigo-50 dark:bg-indigo-500/10" },
+    { label: "Em Andamento", value: stats?.inProgress ?? 0, icon: Clock, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-500/10" },
+    { label: "Concluídas", value: stats?.completed ?? 0, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
+    { label: "Custos Totais", value: `R$ ${(stats?.totalCosts ?? 0).toFixed(2)}`, icon: DollarSign, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-500/10" },
+    { label: "Clientes", value: stats?.totalClients ?? 0, icon: Building2, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-500/10" },
+    { label: "Reservas Ativas", value: stats?.activeReservations ?? 0, icon: BedDouble, color: "text-teal-600", bg: "bg-teal-50 dark:bg-teal-500/10" },
+    { label: "Voos", value: upcomingFlights.length, icon: Plane, color: "text-sky-600", bg: "bg-sky-50 dark:bg-sky-500/10" },
   ];
 
   const quickActions = [
@@ -149,20 +149,20 @@ export default function Dashboard() {
       </CommandDialog>
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         {cards.map((card, i) => (
-          <Card key={i} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          <Card key={i} className="border-0 shadow-soft card-hover">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
+              <CardTitle className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
                 {card.label}
               </CardTitle>
-              <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center`}>
-                <card.icon className={`h-4 w-4 ${card.color}`} />
+              <div className={`w-7 h-7 rounded-md ${card.bg} flex items-center justify-center shrink-0`}>
+                <card.icon className={`h-3.5 w-3.5 ${card.color}`} />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-[oklch(0.22_0.02_250)]">
-                {isLoading ? <Skeleton className="h-7 w-12" /> : card.value}
+            <CardContent className="px-4 pb-4">
+              <div className="text-xl font-bold text-foreground tracking-tight">
+                {isLoading ? <Skeleton className="h-6 w-12" /> : card.value}
               </div>
             </CardContent>
           </Card>
@@ -170,20 +170,21 @@ export default function Dashboard() {
       </div>
 
       {/* Ações Rápidas */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Ações Rápidas</CardTitle>
+      <Card className="border-0 shadow-soft">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold tracking-tight">Ações Rápidas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {quickActions.map((action, i) => (
               <Button
                 key={i}
                 variant="outline"
+                size="sm"
                 onClick={() => setLocation(action.path)}
-                className="gap-2 rounded-lg"
+                className="gap-1.5 rounded-md text-xs h-8"
               >
-                <action.icon className="h-4 w-4" />
+                <action.icon className="h-3.5 w-3.5" />
                 {action.label}
               </Button>
             ))}
@@ -193,8 +194,8 @@ export default function Dashboard() {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-sm lg:col-span-2">
-          <CardHeader><CardTitle className="text-base font-semibold">Visitas e Custos (6 meses)</CardTitle></CardHeader>
+        <Card className="border-0 shadow-soft lg:col-span-2">
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold tracking-tight">Visitas e Custos (6 meses)</CardTitle></CardHeader>
           <CardContent>
             <ChartContainer config={{ visits: { label: "Visitas" }, costs: { label: "Custos" } }} className="h-[200px] w-full">
               <BarChart data={chartData}>
@@ -207,8 +208,8 @@ export default function Dashboard() {
             </ChartContainer>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base font-semibold">Custos por Categoria</CardTitle></CardHeader>
+        <Card className="border-0 shadow-soft">
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold tracking-tight">Custos por Categoria</CardTitle></CardHeader>
           <CardContent>
             <ChartContainer config={{ value: { label: "Valor" } }} className="h-[200px] w-full">
               <PieChart>
@@ -223,7 +224,7 @@ export default function Dashboard() {
       </div>
 
       {/* Taxa de Conclusão */}
-      <Card className="border-0 shadow-sm">
+      <Card className="border-0 shadow-soft">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -240,9 +241,9 @@ export default function Dashboard() {
       </Card>
 
       {/* Próximas Visitas */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base font-semibold">Próximas Visitas</CardTitle>
+      <Card className="border-0 shadow-soft">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-sm font-semibold tracking-tight">Próximas Visitas</CardTitle>
           <Button variant="ghost" size="sm" onClick={() => setLocation("/agendamentos")} className="text-primary">
             Ver todas <ArrowRight className="ml-1 h-3 w-3" />
           </Button>
@@ -301,8 +302,8 @@ export default function Dashboard() {
 
       {/* Monitoramento de Localização (Admin) */}
       {isAdmin && allVisits && allVisits.some((v: any) => v.latitude && v.longitude) && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2"><MapPin className="h-4 w-4 text-blue-600" /> Monitoramento de Localização</CardTitle></CardHeader>
+        <Card className="border-0 shadow-soft">
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold tracking-tight flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-indigo-500" /> Monitoramento de Localização</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {allVisits.filter((v: any) => v.latitude && v.longitude).slice(0, 10).map((v: any) => (

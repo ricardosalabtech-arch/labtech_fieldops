@@ -318,7 +318,7 @@ export const appRouter = router({
       }
       return db.getTrips(filters);
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       visitId: z.number().optional(),
       employeeId: z.number().optional(),
       employeeName: z.string().optional(),
@@ -336,7 +336,7 @@ export const appRouter = router({
         returnDate: input.returnDate ? new Date(input.returnDate) : undefined,
       } as any);
     }),
-    update: protectedProcedure.input(z.object({
+    update: adminProcedure.input(z.object({
       id: z.number(),
       visitId: z.number().optional(),
       employeeId: z.number().optional(),
@@ -371,7 +371,7 @@ export const appRouter = router({
       if (input?.tripId) filters.tripId = input.tripId;
       return db.getHotelReservations(filters);
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       tripId: z.number().optional(),
       visitId: z.number().optional(),
       hotelName: z.string().min(1),
@@ -390,7 +390,7 @@ export const appRouter = router({
         checkOut: new Date(input.checkOut),
       } as any);
     }),
-    update: protectedProcedure.input(z.object({
+    update: adminProcedure.input(z.object({
       id: z.number(),
       hotelName: z.string().optional(),
       city: z.string().optional(),
@@ -418,7 +418,7 @@ export const appRouter = router({
     list: protectedProcedure.input(z.object({ category: z.string().optional(), refId: z.number().optional() }).optional()).query(async ({ input }) => {
       return db.getDocuments(input?.category, input?.refId);
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       category: z.enum(["veiculo", "condutor", "voucher", "passagem", "visita", "cliente", "despesa"]),
       refId: z.number().optional(),
       name: z.string().min(1),
@@ -430,7 +430,7 @@ export const appRouter = router({
     })).mutation(async ({ input }) => {
       return db.createDocument(input);
     }),
-    upload: protectedProcedure.input(z.object({
+    upload: adminProcedure.input(z.object({
       category: z.enum(["veiculo", "condutor", "voucher", "passagem", "visita", "cliente", "despesa"]),
       refId: z.number().optional(),
       fileName: z.string().min(1),
@@ -622,7 +622,7 @@ export const appRouter = router({
       if (input?.visitId) filters.visitId = input.visitId;
       return db.getFlightBookings(filters);
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       tripId: z.number().optional(),
       visitId: z.number().optional(),
       employeeId: z.number().optional(),
@@ -650,7 +650,7 @@ export const appRouter = router({
       if (input.arrivalDateTime) data.arrivalDateTime = new Date(input.arrivalDateTime);
       return db.createFlightBooking(data);
     }),
-    update: protectedProcedure.input(z.object({
+    update: adminProcedure.input(z.object({
       id: z.number(),
       airline: z.string().optional(),
       flightNumber: z.string().optional(),

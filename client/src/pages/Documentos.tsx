@@ -14,8 +14,11 @@ import FileUpload from "@/components/FileUpload";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import EmptyState from "@/components/EmptyState";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Documentos() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [activeTab, setActiveTab] = useState("veiculos");
   const [vehicleDialog, setVehicleDialog] = useState(false);
   const [driverDialog, setDriverDialog] = useState(false);
@@ -137,9 +140,9 @@ export default function Documentos() {
         {/* Veículos */}
         <TabsContent value="veiculos" className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={() => { resetVehicleForm(); setVehicleDialog(true); }} className="gap-2 rounded-lg">
+            {isAdmin && <Button onClick={() => { resetVehicleForm(); setVehicleDialog(true); }} className="gap-2 rounded-lg">
               <Plus className="h-4 w-4" /> Novo Veículo
-            </Button>
+            </Button>}
           </div>
           {vehiclesLoading ? (
             <LoadingSkeleton type="card" count={3} />
@@ -176,13 +179,13 @@ export default function Documentos() {
                       </div>
                     )}
                     {/* Upload de documento */}
-                    <div className="pt-2">
+                    {isAdmin && <div className="pt-2">
                       <FileUpload category="veiculo" refId={v.id} label="Anexar CRLV, seguro, etc." accept=".pdf,.jpg,.jpeg,.png" />
-                    </div>
-                    <div className="flex gap-2 pt-2 border-t">
+                    </div>}
+                    {isAdmin && <div className="flex gap-2 pt-2 border-t">
                       <Button variant="ghost" size="sm" onClick={() => openEditVehicle(v)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
                       <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover veículo?" description={`Remover ${v.model} (${v.plate})? Esta ação não pode ser desfeita.`} onConfirm={() => deleteVehicle.mutate({ id: v.id })} />
-                    </div>
+                    </div>}
                   </CardContent>
                 </Card>
               ))}
@@ -193,9 +196,9 @@ export default function Documentos() {
         {/* Condutores */}
         <TabsContent value="condutores" className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={() => { resetDriverForm(); setDriverDialog(true); }} className="gap-2 rounded-lg">
+            {isAdmin && <Button onClick={() => { resetDriverForm(); setDriverDialog(true); }} className="gap-2 rounded-lg">
               <Plus className="h-4 w-4" /> Novo Condutor
-            </Button>
+            </Button>}
           </div>
           {driversLoading ? (
             <LoadingSkeleton type="card" count={3} />
@@ -233,13 +236,13 @@ export default function Documentos() {
                       </div>
                     )}
                     {/* Upload de documento */}
-                    <div className="pt-2">
+                    {isAdmin && <div className="pt-2">
                       <FileUpload category="condutor" refId={d.id} label="Anexar CNH, exame, etc." accept=".pdf,.jpg,.jpeg,.png" />
-                    </div>
-                    <div className="flex gap-2 pt-2 border-t">
+                    </div>}
+                    {isAdmin && <div className="flex gap-2 pt-2 border-t">
                       <Button variant="ghost" size="sm" onClick={() => openEditDriver(d)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
                       <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover condutor?" description={`Remover ${d.fullName}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteDriver.mutate({ id: d.id })} />
-                    </div>
+                    </div>}
                   </CardContent>
                 </Card>
               ))}

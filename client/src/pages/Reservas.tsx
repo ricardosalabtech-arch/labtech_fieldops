@@ -17,6 +17,7 @@ import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const statusConfig = {
   confirmada: { label: "Confirmada", color: "bg-green-100 text-green-700 border-green-200" },
@@ -25,6 +26,8 @@ const statusConfig = {
 };
 
 export default function Reservas() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [filterStatus, setFilterStatus] = useState("all");
@@ -109,9 +112,9 @@ export default function Reservas() {
           <h1 className="text-2xl font-bold tracking-tight text-[oklch(0.22_0.02_250)]">Reservas de Hotel</h1>
           <p className="text-sm text-muted-foreground">{reservations?.length ?? 0} reserva(s)</p>
         </div>
-        <Button onClick={openNew} className="gap-2 rounded-lg">
+        {isAdmin && <Button onClick={openNew} className="gap-2 rounded-lg">
           <Plus className="h-4 w-4" /> Nova Reserva
-        </Button>
+        </Button>}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -128,7 +131,7 @@ export default function Reservas() {
       ) : !reservations || reservations.length === 0 ? (
         <Card className="border-0 shadow-sm">
           <CardContent>
-            <EmptyState icon={BedDouble} title="Nenhuma reserva cadastrada" description="Crie a primeira reserva de hotel para suas viagens." action={<Button onClick={openNew} className="gap-2 rounded-lg"><Plus className="h-4 w-4" /> Criar primeira reserva</Button>} />
+            <EmptyState icon={BedDouble} title="Nenhuma reserva cadastrada" description={isAdmin ? "Crie a primeira reserva de hotel para suas viagens." : "Nenhuma reserva de hotel disponível."} action={isAdmin ? <Button onClick={openNew} className="gap-2 rounded-lg"><Plus className="h-4 w-4" /> Criar primeira reserva</Button> : undefined} />
           </CardContent>
         </Card>
       ) : (
@@ -162,7 +165,7 @@ export default function Reservas() {
                       <FileCheck className="h-3.5 w-3.5" /> Ver voucher da reserva
                     </a>
                   )}
-                  <div className="pt-2 border-t">
+                  {isAdmin && <div className="pt-2 border-t">
                     <FileUpload
                       category="voucher"
                       refId={r.id}
@@ -172,11 +175,11 @@ export default function Reservas() {
                         updateRes.mutate({ id: r.id, voucherUrl: doc.fileUrl });
                       }}
                     />
-                  </div>
+                  </div>}
                   <div className="flex gap-2 pt-2">
                     <WazeLink address={r.hotelName} city={r.city} />
-                    <Button variant="ghost" size="sm" aria-label="Editar" onClick={() => openEdit(r)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>
-                    <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover reserva?" description={`Remover reserva no ${r.hotelName}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteRes.mutate({ id: r.id })} />
+                    {isAdmin && <Button variant="ghost" size="sm" aria-label="Editar" onClick={() => openEdit(r)} className="gap-1 text-xs"><Pencil className="h-3 w-3" /> Editar</Button>}
+                    {isAdmin && <ConfirmDialog trigger={<Button variant="ghost" size="sm" aria-label="Excluir" className="gap-1 text-xs text-destructive"><Trash2 className="h-3 w-3" /></Button>} title="Remover reserva?" description={`Remover reserva no ${r.hotelName}? Esta ação não pode ser desfeita.`} onConfirm={() => deleteRes.mutate({ id: r.id })} />}
                   </div>
                 </CardContent>
               </Card>
