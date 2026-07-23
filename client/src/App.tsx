@@ -9,7 +9,6 @@ import Dashboard from "./pages/Dashboard";
 import DashboardViagem from "./pages/DashboardViagem";
 import Agendamentos from "./pages/Agendamentos";
 import Cadastro from "@/pages/Cadastro";
-import Viagens from "./pages/Viagens";
 import Reservas from "./pages/Reservas";
 import Documentos from "./pages/Documentos";
 import Custos from "./pages/Custos";
@@ -33,7 +32,7 @@ function Router() {
         <DashboardLayout>
           <Switch>
             <Route path={"/dashboard"} component={DashboardRedirect} />
-            <Route path={"/viagens"} component={Viagens} />
+            <Route path={"/viagens"}><Redirect to="/agendamentos" /></Route>
             <Route path={"/agendamentos"} component={Agendamentos} />
             <Route path={"/cadastro"} component={Cadastro} />
             <Route path={"/reservas"} component={Reservas} />

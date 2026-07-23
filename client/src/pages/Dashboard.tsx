@@ -96,7 +96,7 @@ export default function Dashboard() {
 
   const quickActions = [
     { label: "Nova Visita", path: "/agendamentos", icon: Plus },
-    { label: "Nova Viagem", path: "/viagens", icon: Plus },
+    { label: "Nova Viagem", path: "/agendamentos", icon: Plus },
     { label: "Nova Reserva", path: "/reservas", icon: Plus },
     { label: "Ver Relatórios", path: "/relatorios", icon: ArrowRight },
   ];
@@ -148,7 +148,7 @@ export default function Dashboard() {
           {trips && trips.length > 0 && (
             <CommandGroup heading="Viagens">
               {trips.slice(0, 5).map(t => (
-                <CommandItem key={t.id} onSelect={() => { setSearchOpen(false); setLocation("/viagens"); }}>
+                <CommandItem key={t.id} onSelect={() => { setSearchOpen(false); setLocation("/agendamentos"); }}>
                   <Car className="mr-2 h-4 w-4" />
                   <span>{t.employeeName || "Viagem"} — {format(new Date(t.departureDate), "dd/MM/yyyy")}</span>
                 </CommandItem>
@@ -329,14 +329,14 @@ export default function Dashboard() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base font-semibold flex items-center gap-2"><Plane className="h-4 w-4 text-indigo-600" /> Próximos Voos</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => setLocation("/viagens")} className="text-primary">
+            <Button variant="ghost" size="sm" onClick={() => setLocation("/agendamentos")} className="text-primary">
               Ver viagens <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {upcomingFlights.map(f => (
-                <div key={f.id} className="flex items-center justify-between p-3 rounded-lg bg-indigo-50/40 hover:bg-indigo-50/70 transition-colors cursor-pointer" onClick={() => setLocation("/viagens")}>
+                <div key={f.id} className="flex items-center justify-between p-3 rounded-lg bg-indigo-50/40 hover:bg-indigo-50/70 transition-colors cursor-pointer" onClick={() => setLocation("/agendamentos")}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
                       <Plane className="h-5 w-5 text-indigo-600" />

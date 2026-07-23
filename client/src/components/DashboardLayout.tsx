@@ -25,7 +25,7 @@ import {
 import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import {
-  LayoutDashboard, Car, Calendar, Building2, BedDouble,
+  LayoutDashboard, Calendar, Building2, BedDouble,
   FolderOpen, ClipboardCheck, FileText, Settings, LogOut,
   PanelLeft, ShieldCheck, ChevronRight,
 } from "lucide-react";
@@ -37,7 +37,6 @@ import { Button } from "./ui/button";
 const allMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", roles: ["admin", "tecnico", "especialista", "user"], section: "principal" },
   { icon: Calendar, label: "Agenda", path: "/agendamentos", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
-  { icon: Car, label: "Viagens", path: "/viagens", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
   { icon: BedDouble, label: "Reserva de Hotel e Passagens", path: "/reservas", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
   { icon: Building2, label: "Cadastro", path: "/cadastro", roles: ["admin"], section: "operacional" },
   { icon: FolderOpen, label: "Documentos", path: "/documentos", roles: ["admin", "tecnico", "especialista", "user"], section: "recursos" },

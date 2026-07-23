@@ -229,3 +229,13 @@
 - [x] DashboardViagem: Atalhos rápidos para Documentos, Reservas e Custos
 - [x] Backend: procedures para iniciar/finalizar viagem, registrar chegada, despesas rápidas
 - [x] Salvar checkpoint e testar
+
+## Fase 26: Integração FieldOps ↔ salabtech.com + Migração Viagens para Agenda
+
+- [ ] Implementar endpoint GET /fieldops/visits no FieldOps (retorna visitas no formato esperado pelo salabtech.com)
+- [ ] Implementar endpoint PATCH /fieldops/visits/:id/status no FieldOps (recebe atualização de status do salabtech.com)
+- [ ] Autenticação via Bearer token (VITE_FRONTEND_FORGE_API_KEY)
+- [ ] Migrar funcionalidade completa de Viagens.tsx para aba Viagem da Agenda (CRUD, checklist, PainelViagem, hotel, voos)
+- [ ] Remover menu Viagens do DashboardLayout e rota /viagens do App.tsx
+- [ ] Atualizar links de "Nova Viagem" e "Próximos Voos" no Dashboard.tsx para /agendamentos?tab=viagem
+- [ ] Salvar checkpoint e testar
