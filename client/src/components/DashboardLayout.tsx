@@ -36,10 +36,10 @@ import { Button } from "./ui/button";
 
 const allMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", roles: ["admin", "tecnico", "especialista", "user"], section: "principal" },
-  { icon: Car, label: "Viagens", path: "/viagens", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
   { icon: Calendar, label: "Agendamentos", path: "/agendamentos", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
+  { icon: Car, label: "Viagens", path: "/viagens", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
+  { icon: BedDouble, label: "Reserva de Hotel e Passagens", path: "/reservas", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
   { icon: Building2, label: "Clientes", path: "/clientes", roles: ["admin"], section: "operacional" },
-  { icon: BedDouble, label: "Hotel e Passagens", path: "/reservas", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
   { icon: FolderOpen, label: "Documentos", path: "/documentos", roles: ["admin", "tecnico", "especialista", "user"], section: "recursos" },
   { icon: ClipboardCheck, label: "Revisão de Custos", path: "/custos", roles: ["admin", "tecnico", "especialista", "user"], section: "recursos" },
   { icon: FileText, label: "Relatórios", path: "/relatorios", roles: ["admin"], section: "gestao" },

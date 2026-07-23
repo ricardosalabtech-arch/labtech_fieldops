@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Car, Plus, MapPin, Calendar, Trash2, Pencil, Plane, Hotel, Navigation, ChevronDown, ChevronRight } from "lucide-react";
+import { Car, Plus, MapPin, Calendar, Trash2, Pencil, Plane, Hotel, Navigation, ChevronDown, ChevronRight, ClipboardCheck, CheckCircle2, Circle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -54,6 +54,7 @@ export default function Viagens() {
   const { data: employees } = trpc.employees.list.useQuery();
   const { data: hotelReservations } = trpc.hotelReservations.list.useQuery();
   const { data: flights } = trpc.flightBookings.list.useQuery();
+  const { data: checklists } = trpc.checklists.list.useQuery();
 
   const createTrip = trpc.trips.create.useMutation({
     onSuccess: () => { utils.trips.list.invalidate(); toast.success("Viagem criada!"); setDialogOpen(false); resetForm(); },
@@ -210,6 +211,59 @@ export default function Viagens() {
   const getTripHotels = (tripId: number) => hotelReservations?.filter(h => h.tripId === tripId) || [];
   const getTripFlights = (tripId: number) => flights?.filter(f => f.tripId === tripId) || [];
   const getTripVisit = (visitId: number | null) => visits?.find(v => v.id === visitId);
+
+  // Checklist do veículo e ferramentas por viagem
+  const vehicleChecklistItems = [
+    "Abastecimento completo",
+    "Óleo e água verificados",
+    "Pneus calibrados (incluindo estepe)",
+    "Documentos do veículo (CRLV)",
+    "Extintor e macaco",
+    "Cintos de segurança",
+    "Ferramentas de calibração",
+    "Multímetro / Instrumentos",
+    "Padrões de calibração",
+    "EPIs (luvas, óculos, calçado)",
+  ];
+
+  const getTripChecklist = (tripId: number) => {
+    const trip = trips?.find(t => t.id === tripId);
+    if (!trip?.visitId) return null;
+    return checklists?.find(c => c.visitId === trip.visitId && c.title === "Checklist do Veículo e Ferramentas") || null;
+  };
+
+  const parseChecklistItems = (itemsStr: string): boolean[] => {
+    try { return JSON.parse(itemsStr); } catch { return []; }
+  };
+
+  const createChecklist = trpc.checklists.create.useMutation({
+    onSuccess: () => { utils.checklists.list.invalidate(); toast.success("Checklist salvo!"); },
+    onError: (e) => toast.error("Erro ao salvar checklist: " + e.message),
+  });
+  const updateChecklist = trpc.checklists.update.useMutation({
+    onSuccess: () => { utils.checklists.list.invalidate(); },
+    onError: (e) => toast.error("Erro ao atualizar checklist: " + e.message),
+  });
+
+  function toggleChecklistItem(tripId: number, itemIndex: number) {
+    const existing = getTripChecklist(tripId);
+    if (!existing) return;
+    const items = parseChecklistItems(existing.items);
+    items[itemIndex] = !items[itemIndex];
+    updateChecklist.mutate({ id: existing.id, items: JSON.stringify(items) });
+  }
+
+  function initChecklist(tripId: number) {
+    const trip = trips?.find(t => t.id === tripId);
+    if (!trip?.visitId) { toast.error("Esta viagem não tem visita associada"); return; }
+    const existing = getTripChecklist(tripId);
+    if (existing) return;
+    createChecklist.mutate({
+      visitId: trip.visitId,
+      title: "Checklist do Veículo e Ferramentas",
+      items: JSON.stringify(vehicleChecklistItems.map(() => false)),
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -374,6 +428,40 @@ export default function Viagens() {
                               </div>
                             </div>
                           )}
+
+                          {/* Checklist do Veículo e Ferramentas */}
+                          <div className="bg-white rounded-lg border p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-sm font-semibold flex items-center gap-1.5"><ClipboardCheck className="h-4 w-4 text-blue-600" /> Checklist do Veículo e Ferramentas</h4>
+                              {(() => {
+                                const cl = getTripChecklist(t.id);
+                                if (!cl) {
+                                  return <Button size="sm" variant="outline" onClick={() => initChecklist(t.id)} className="h-7 gap-1 text-xs"><Plus className="h-3 w-3" /> Iniciar Checklist</Button>;
+                                }
+                                const items = parseChecklistItems(cl.items);
+                                const done = items.filter(Boolean).length;
+                                const total = vehicleChecklistItems.length;
+                                return <span className={`text-[10px] px-2 py-0.5 rounded-full ${done === total ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>{done}/{total} concluído</span>;
+                              })()}
+                            </div>
+                            {(() => {
+                              const cl = getTripChecklist(t.id);
+                              if (!cl) {
+                                return <p className="text-xs text-muted-foreground/60 py-2">Clique em "Iniciar Checklist" para verificar o veículo e ferramentas antes da viagem.</p>;
+                              }
+                              const items = parseChecklistItems(cl.items);
+                              return (
+                                <div className="space-y-1.5">
+                                  {vehicleChecklistItems.map((label, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 rounded-md px-2 py-1 transition-colors" onClick={() => toggleChecklistItem(t.id, idx)}>
+                                      {items[idx] ? <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" /> : <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />}
+                                      <span className={`text-xs ${items[idx] ? "text-foreground line-through" : "text-muted-foreground"}`}>{label}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                          </div>
 
                           {t.notes && (
                             <div className="bg-white rounded-lg border p-3">

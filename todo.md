@@ -164,8 +164,8 @@
 - [x] Reformular Dashboard com estilo de cards clássicos (border-0, uppercase, text-2xl)
 - [x] Reescrever Reservas.tsx como página unificada "Reserva de Hotel e Passagens" (hotel + voos)
 - [x] Documentos.tsx: remover tabs Vouchers e Passagens (manter apenas Veículos e Condutores)
-- [ ] Reorganizar ordem do menu no DashboardLayout
-- [ ] Renomear "Reservas" para "Reserva de Hotel e Passagens" no menu
-- [ ] Sincronizar vinculação visita↔viagem no backend (ao criar/editar viagem, atualizar visits.tripId)
-- [ ] Adicionar checklist de veículo e ferramentas para técnico na página Viagens
-- [ ] Salvar checkpoint e testar
+- [x] Reorganizar ordem do menu no DashboardLayout
+- [x] Renomear "Reservas" para "Reserva de Hotel e Passagens" no menu
+- [x] Sincronizar vinculação visita↔viagem no backend (ao criar/editar viagem, atualizar visits.tripId)
+- [x] Adicionar checklist de veículo e ferramentas para técnico na página Viagens
+- [x] Salvar checkpoint e testar

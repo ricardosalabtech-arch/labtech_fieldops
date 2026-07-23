@@ -330,11 +330,16 @@ export const appRouter = router({
       status: z.enum(["planejada", "em_andamento", "concluida", "cancelada"]).default("planejada"),
       notes: z.string().optional(),
     })).mutation(async ({ input }) => {
-      return db.createTrip({
+      const result = await db.createTrip({
         ...input,
         departureDate: new Date(input.departureDate),
         returnDate: input.returnDate ? new Date(input.returnDate) : undefined,
       } as any);
+      // Sincronizar: se visitId foi fornecido, vincular visita à viagem
+      if (input.visitId && result.id) {
+        await db.linkVisitToTrip(input.visitId, result.id);
+      }
+      return result;
     }),
     update: adminProcedure.input(z.object({
       id: z.number(),
@@ -352,6 +357,10 @@ export const appRouter = router({
       const { id, ...data } = input;
       if (data.departureDate) data.departureDate = new Date(data.departureDate) as any;
       if (data.returnDate) data.returnDate = new Date(data.returnDate) as any;
+      // Sincronizar: se visitId foi fornecido, vincular visita à viagem
+      if (input.visitId) {
+        await db.linkVisitToTrip(input.visitId, id);
+      }
       return db.updateTrip(id, data as any);
     }),
     delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {

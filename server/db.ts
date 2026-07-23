@@ -242,7 +242,22 @@ export async function updateTrip(id: number, data: Partial<InsertTrip>) {
 export async function deleteTrip(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  // Limpar tripId das visitas vinculadas antes de excluir
+  await db.update(visits).set({ tripId: null }).where(eq(visits.tripId, id));
   await db.delete(trips).where(eq(trips.id, id));
+}
+
+// Sincronizar vinculação visita↔viagem
+export async function linkVisitToTrip(visitId: number, tripId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(visits).set({ tripId }).where(eq(visits.id, visitId));
+}
+
+export async function unlinkVisitFromTrip(tripId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(visits).set({ tripId: null }).where(eq(visits.tripId, tripId));
 }
 
 // ─── Hotel Reservations ─────────────────────────────────────
