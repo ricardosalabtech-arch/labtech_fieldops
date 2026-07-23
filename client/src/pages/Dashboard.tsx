@@ -13,6 +13,7 @@ import { CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem, Co
 import { useState, useMemo } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { MapPin, Navigation } from "lucide-react";
+import PeriodFilter, { PeriodValue, filterByPeriod, getPeriodRange } from "@/components/PeriodFilter";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -28,6 +29,13 @@ export default function Dashboard() {
   const { data: auditLog } = trpc.auditLog.list.useQuery();
   const [, setLocation] = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [period, setPeriod] = useState<PeriodValue>("all");
+  const [customRange, setCustomRange] = useState<{ start: Date; end: Date } | undefined>(undefined);
+
+  const filteredVisits = useMemo(() => filterByPeriod(allVisits || [], period, (v: any) => new Date(v.visitDate), customRange), [allVisits, period, customRange]);
+  const filteredTrips = useMemo(() => filterByPeriod(trips || [], period, (t: any) => new Date(t.departureDate), customRange), [trips, period, customRange]);
+  const filteredExpenses = useMemo(() => filterByPeriod(expenses || [], period, (e: any) => new Date(e.createdAt), customRange), [expenses, period, customRange]);
+  const filteredFlights = useMemo(() => filterByPeriod(flights || [], period, (f: any) => new Date(f.departureDateTime), customRange), [flights, period, customRange]);
 
   const chartData = useMemo(() => {
     const months = Array.from({ length: 6 }, (_, i) => {
@@ -35,47 +43,56 @@ export default function Dashboard() {
       d.setMonth(d.getMonth() - (5 - i));
       return { month: format(d, "MMM", { locale: ptBR }), visits: 0, costs: 0 };
     });
-    allVisits?.forEach(v => {
+    filteredVisits.forEach(v => {
       const m = format(new Date(v.visitDate), "MMM", { locale: ptBR });
       const entry = months.find(x => x.month === m);
       if (entry) entry.visits++;
     });
-    expenses?.forEach(e => {
+    filteredExpenses.forEach(e => {
       const m = format(new Date(e.createdAt), "MMM", { locale: ptBR });
       const entry = months.find(x => x.month === m);
       if (entry) entry.costs += parseFloat(e.amount);
     });
     return months;
-  }, [allVisits, expenses]);
+  }, [filteredVisits, filteredExpenses]);
 
   const costByCategory = useMemo(() => {
     const cats = { transporte: 0, hospedagem: 0, alimentacao: 0, outros: 0 };
-    expenses?.forEach(e => { cats[e.category as keyof typeof cats] += parseFloat(e.amount); });
+    filteredExpenses.forEach(e => { cats[e.category as keyof typeof cats] += parseFloat(e.amount); });
     return [
       { name: "Transporte", value: cats.transporte, fill: "oklch(0.45 0.25 250)" },
       { name: "Hospedagem", value: cats.hospedagem, fill: "oklch(0.70 0.15 180)" },
       { name: "Alimentação", value: cats.alimentacao, fill: "oklch(0.72 0.18 140)" },
       { name: "Outros", value: cats.outros, fill: "oklch(0.75 0.15 80)" },
     ];
-  }, [expenses]);
+  }, [filteredExpenses]);
 
   const completionRate = useMemo(() => {
-    const total = allVisits?.length || 0;
-    const done = allVisits?.filter(v => v.status === "concluido")?.length || 0;
+    const total = filteredVisits.length;
+    const done = filteredVisits.filter(v => v.status === "concluido").length;
     return total > 0 ? Math.round((done / total) * 100) : 0;
-  }, [allVisits]);
+  }, [filteredVisits]);
 
-  const upcomingFlights = flights?.filter(f => new Date(f.departureDateTime) >= new Date() && f.status !== "cancelada").slice(0, 3) || [];
+  const upcomingFlights = filteredFlights.filter(f => new Date(f.departureDateTime) >= new Date() && f.status !== "cancelada").slice(0, 3);
 
-  const cards = [
-    { label: "Visitas Hoje", value: stats?.visitsToday ?? 0, icon: Calendar, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Em Andamento", value: stats?.inProgress ?? 0, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Concluídas", value: stats?.completed ?? 0, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Custos Totais", value: `R$ ${(stats?.totalCosts ?? 0).toFixed(2)}`, icon: DollarSign, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "Clientes", value: stats?.totalClients ?? 0, icon: Building2, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Reservas Ativas", value: stats?.activeReservations ?? 0, icon: BedDouble, color: "text-teal-600", bg: "bg-teal-50" },
-    { label: "Voos", value: upcomingFlights.length, icon: Plane, color: "text-indigo-600", bg: "bg-indigo-50" },
-  ];
+  const periodCards = useMemo(() => {
+    const todayVisits = filteredVisits.filter(v => {
+      const today = new Date();
+      return v.visitDate && new Date(v.visitDate).toDateString() === today.toDateString();
+    }).length;
+    const inProgress = filteredVisits.filter(v => v.status === "em_andamento").length;
+    const done = filteredVisits.filter(v => v.status === "concluido").length;
+    const totalCosts = filteredExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+    return [
+      { label: "Visitas Hoje", value: todayVisits, icon: Calendar, color: "text-blue-600", bg: "bg-blue-50" },
+      { label: "Em Andamento", value: inProgress, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+      { label: "Concluídas", value: done, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+      { label: "Custos Totais", value: `R$ ${totalCosts.toFixed(2)}`, icon: DollarSign, color: "text-purple-600", bg: "bg-purple-50" },
+      { label: "Clientes", value: clients?.length ?? 0, icon: Building2, color: "text-blue-600", bg: "bg-blue-50" },
+      { label: "Reservas Ativas", value: stats?.activeReservations ?? 0, icon: BedDouble, color: "text-teal-600", bg: "bg-teal-50" },
+      { label: "Voos", value: upcomingFlights.length, icon: Plane, color: "text-indigo-600", bg: "bg-indigo-50" },
+    ];
+  }, [filteredVisits, filteredExpenses, clients, stats, upcomingFlights]);
 
   const quickActions = [
     { label: "Nova Visita", path: "/agendamentos", icon: Plus },
@@ -99,6 +116,9 @@ export default function Dashboard() {
           </Button>
         </div>
       </div>
+
+      {/* Filtro de Período */}
+      <PeriodFilter value={period} onChange={(v, r) => { setPeriod(v); if (r) setCustomRange(r); }} />
 
       {/* Busca Global */}
       <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
@@ -150,7 +170,7 @@ export default function Dashboard() {
 
       {/* Cards de Resumo — estilo clássico */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        {cards.map((card, i) => (
+        {periodCards.map((card, i) => (
           <Card key={i} className="border-0 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -263,14 +283,14 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-          ) : !visits || visits.length === 0 ? (
+          ) : filteredVisits.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Calendar className="h-10 w-10 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Nenhuma visita agendada</p>
+              <p className="text-sm">Nenhuma visita no período selecionado</p>
             </div>
           ) : (
             <div className="space-y-2">
-              {visits.slice(0, 5).map((visit) => (
+              {filteredVisits.filter(v => v.status === "agendado").slice(0, 5).map((visit) => (
                 <div
                   key={visit.id}
                   className="flex items-center justify-between p-3 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
@@ -337,12 +357,12 @@ export default function Dashboard() {
       )}
 
       {/* Monitoramento de Localização (Admin) */}
-      {isAdmin && allVisits && allVisits.some((v: any) => v.latitude && v.longitude) && (
+      {isAdmin && filteredVisits && filteredVisits.some((v: any) => v.latitude && v.longitude) && (
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3"><CardTitle className="text-base font-semibold flex items-center gap-2"><MapPin className="h-4 w-4 text-blue-600" /> Monitoramento de Localização</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {allVisits.filter((v: any) => v.latitude && v.longitude).slice(0, 10).map((v: any) => (
+              {filteredVisits.filter((v: any) => v.latitude && v.longitude).slice(0, 10).map((v: any) => (
                 <div key={v.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40">
                   <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
                     <Navigation className="h-4 w-4 text-green-600" />

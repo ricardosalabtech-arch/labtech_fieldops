@@ -179,3 +179,12 @@
 - [x] Atualizar menu: substituir "Clientes" por "Cadastro" e remover "Equipe" de Configurações
 - [x] Atualizar rotas em App.tsx
 - [x] Salvar checkpoint e testar
+
+## Fase 21: Filtros de Período e Painel de Viagem
+
+- [x] Criar componente reutilizável PeriodFilter (pills: Todos, Hoje, Esta semana, Este mês, Personalizado)
+- [x] Adicionar filtro de período no Dashboard (filtrar visitas, viagens e despesas por período)
+- [x] Adicionar filtro de período no Viagens (filtrar viagens por data de saída)
+- [x] Criar componente PainelViagem com fluxo: Destino → Previsão de chegada → Clima → Rota/Trânsito → Pedágios → Combustível → Paradas → Hotel → Cliente
+- [x] Integrar PainelViagem na visualização expandida de cada viagem
+- [x] Salvar checkpoint e testar

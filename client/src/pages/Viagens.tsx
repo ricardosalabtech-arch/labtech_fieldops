@@ -21,6 +21,9 @@ import WeatherWidget from "@/components/WeatherWidget";
 import FileUpload from "@/components/FileUpload";
 import { FileCheck } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import PeriodFilter, { PeriodValue, filterByPeriod } from "@/components/PeriodFilter";
+import PainelViagem from "@/components/PainelViagem";
+import { useMemo } from "react";
 
 const statusConfig = {
   planejada: { label: "Planejada", color: "border-blue-300 text-blue-700", bg: "bg-blue-50", dot: "bg-blue-500" },
@@ -43,6 +46,8 @@ export default function Viagens() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState<any>(null);
   const [expandedTrip, setExpandedTrip] = useState<number | null>(null);
+  const [period, setPeriod] = useState<PeriodValue>("all");
+  const [customRange, setCustomRange] = useState<{ start: Date; end: Date } | undefined>(undefined);
   const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
   const [hotelForTrip, setHotelForTrip] = useState<number | null>(null);
   const [flightDialogOpen, setFlightDialogOpen] = useState(false);
@@ -55,6 +60,7 @@ export default function Viagens() {
   const { data: hotelReservations } = trpc.hotelReservations.list.useQuery();
   const { data: flights } = trpc.flightBookings.list.useQuery();
   const { data: checklists } = trpc.checklists.list.useQuery();
+  const { data: expenses } = trpc.expenses.list.useQuery();
 
   const createTrip = trpc.trips.create.useMutation({
     onSuccess: () => { utils.trips.list.invalidate(); toast.success("Viagem criada!"); setDialogOpen(false); resetForm(); },
@@ -202,10 +208,11 @@ export default function Viagens() {
     });
   }
 
+  const filteredTrips = useMemo(() => filterByPeriod(trips || [], period, (t: any) => new Date(t.departureDate), customRange), [trips, period, customRange]);
+
   const tripsByStatus = (status: string) => {
-    if (!trips) return [];
-    if (status === "all") return trips;
-    return trips.filter(t => t.status === status);
+    if (status === "all") return filteredTrips;
+    return filteredTrips.filter(t => t.status === status);
   };
 
   const getTripHotels = (tripId: number) => hotelReservations?.filter(h => h.tripId === tripId) || [];
@@ -270,12 +277,15 @@ export default function Viagens() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[oklch(0.22_0.02_250)]">Viagens</h1>
-          <p className="text-sm text-muted-foreground">{trips?.length ?? 0} viagem(ns) · {flights?.length ?? 0} voo(s) · {hotelReservations?.length ?? 0} reserva(s)</p>
+          <p className="text-sm text-muted-foreground">{filteredTrips.length} viagem(ns) · {flights?.length ?? 0} voo(s) · {hotelReservations?.length ?? 0} reserva(s)</p>
         </div>
         <Button onClick={openNew} className="gap-2 rounded-lg">
           <Plus className="h-4 w-4" /> Nova Viagem
         </Button>
       </div>
+
+      {/* Filtro de Período */}
+      <PeriodFilter value={period} onChange={(v, r) => { setPeriod(v); if (r) setCustomRange(r); }} />
 
       {tripsLoading ? (
         <LoadingSkeleton type="list" count={3} />
@@ -286,8 +296,16 @@ export default function Viagens() {
           </CardContent>
         </Card>
       ) : (
+        <>
+        {filteredTrips.length === 0 ? (
+          <Card className="border-0 shadow-sm">
+            <CardContent>
+              <EmptyState icon={Car} title="Nenhuma viagem no período" description="Ajuste o filtro de período para ver mais viagens." />
+            </CardContent>
+          </Card>
+        ) : (
         <div className="space-y-4">
-          {trips.map(t => {
+          {filteredTrips.map(t => {
             const tsc = statusConfig[t.status as keyof typeof statusConfig] || statusConfig.planejada;
             const isExpanded = expandedTrip === t.id;
             const tripHotels = getTripHotels(t.id);
@@ -331,6 +349,15 @@ export default function Viagens() {
                   {/* Expanded content */}
                   {isExpanded && (
                     <div className="border-t bg-slate-50/30 p-4 space-y-4">
+                      {/* Painel da Viagem */}
+                      <PainelViagem
+                        trip={t}
+                        visit={visit}
+                        hotels={tripHotels}
+                        flights={tripFlights}
+                        expenses={expenses?.filter(e => e.tripId === t.id) || []}
+                      />
+
                       {/* Weather + Transport info */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {destCity && (
@@ -476,9 +503,11 @@ export default function Viagens() {
                 </CardContent>
               </Card>
             );
-          })}
+          ))}
         </div>
-      )}
+        )}
+        </>
+      )
 
       {/* Trip Dialog */}
       <Dialog open={dialogOpen} onOpenChange={o => { setDialogOpen(o); if (!o) resetForm(); }}>
