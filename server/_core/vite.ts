@@ -39,7 +39,15 @@ export async function setupVite(app: Express, server: Server) {
     plugins: [...(viteConfig.plugins || []), stripHmrClientPlugin()],
   });
 
+  // Intercept /@vite/client BEFORE vite.middlewares to serve an empty stub
+  // This prevents the WebSocket HMR connection error in preview environments
+  app.use("/@vite/client", (_req, res) => {
+    res.set("Content-Type", "text/javascript");
+    res.send("/* @vite/client stubbed - HMR disabled */\n");
+  });
+
   app.use(vite.middlewares);
+
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
