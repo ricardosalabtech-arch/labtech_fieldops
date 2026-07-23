@@ -283,14 +283,16 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-          ) : filteredVisits.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Calendar className="h-10 w-10 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Nenhuma visita no período selecionado</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {filteredVisits.filter(v => v.status === "agendado").slice(0, 5).map((visit) => (
+          ) : (() => {
+            const scheduled = filteredVisits.filter(v => v.status === "agendado").slice(0, 5);
+            return scheduled.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Calendar className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">Nenhuma visita agendada no período selecionado</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {scheduled.map((visit) => (
                 <div
                   key={visit.id}
                   className="flex items-center justify-between p-3 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
@@ -315,9 +317,10 @@ export default function Dashboard() {
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
 

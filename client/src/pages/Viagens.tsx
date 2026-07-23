@@ -503,11 +503,11 @@ export default function Viagens() {
                 </CardContent>
               </Card>
             );
-          ))}
+          })}
         </div>
         )}
         </>
-      )
+      )}
 
       {/* Trip Dialog */}
       <Dialog open={dialogOpen} onOpenChange={o => { setDialogOpen(o); if (!o) resetForm(); }}>
