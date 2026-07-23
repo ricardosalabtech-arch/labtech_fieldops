@@ -456,7 +456,8 @@ export default function Viagens() {
                             </div>
                           )}
 
-                          {/* Checklist do Veículo e Ferramentas */}
+                          {/* Checklist do Veículo e Ferramentas (apenas equipe) */}
+                          {!isAdmin && (
                           <div className="bg-white rounded-lg border p-3">
                             <div className="flex items-center justify-between mb-2">
                               <h4 className="text-sm font-semibold flex items-center gap-1.5"><ClipboardCheck className="h-4 w-4 text-blue-600" /> Checklist do Veículo e Ferramentas</h4>
@@ -489,6 +490,7 @@ export default function Viagens() {
                               );
                             })()}
                           </div>
+                          )}
 
                           {t.notes && (
                             <div className="bg-white rounded-lg border p-3">

@@ -243,15 +243,24 @@ export default function PainelViagem({ trip, visit, hotels, flights, expenses }:
       color: "text-teal-600",
       bg: "bg-teal-50",
       content: (
-        <div className="space-y-1">
+        <div className="space-y-2">
           {hotels.length > 0 ? (
             hotels.map(h => (
-              <div key={h.id} className="text-xs">
+              <div key={h.id} className="text-xs space-y-1">
                 <p className="font-medium text-foreground">{h.hotelName}</p>
                 <p className="text-muted-foreground">
                   {h.city} · {format(new Date(h.checkIn), "dd/MM", { locale: ptBR })} → {format(new Date(h.checkOut), "dd/MM", { locale: ptBR })}
                 </p>
                 <p className="text-muted-foreground">R$ {Number(h.value).toFixed(2)}</p>
+                <a
+                  href={`https://www.waze.com/ul?q=${encodeURIComponent(`${h.hotelName}, ${h.city}`)}&navigate=yes`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-teal-600 text-white text-[10px] font-medium hover:bg-teal-700 transition-colors"
+                >
+                  <Navigation className="h-3 w-3" />
+                  Navegar para o Hotel
+                </a>
               </div>
             ))
           ) : (
@@ -272,6 +281,17 @@ export default function PainelViagem({ trip, visit, hotels, flights, expenses }:
           {visit?.address && <p className="text-xs text-muted-foreground">{visit.address}, {visit.city}{visit.state ? ` - ${visit.state}` : ""}</p>}
           {visit?.contactName && <p className="text-xs text-muted-foreground">Contato: {visit.contactName}</p>}
           {visit?.contactPhone && <p className="text-xs text-muted-foreground">Tel: {visit.contactPhone}</p>}
+          {visit?.address && (
+            <a
+              href={`https://www.waze.com/ul?q=${encodeURIComponent(`${visit.address}, ${visit.city}`)}&navigate=yes`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[oklch(0.48_0.18_250)] text-white text-[10px] font-medium hover:bg-[oklch(0.38_0.18_250)] transition-colors mt-1"
+            >
+              <Navigation className="h-3 w-3" />
+              Navegar para o Cliente
+            </a>
+          )}
         </div>
       ),
     },

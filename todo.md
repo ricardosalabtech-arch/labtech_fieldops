@@ -188,3 +188,11 @@
 - [x] Criar componente PainelViagem com fluxo: Destino → Previsão de chegada → Clima → Rota/Trânsito → Pedágios → Combustível → Paradas → Hotel → Cliente
 - [x] Integrar PainelViagem na visualização expandida de cada viagem
 - [x] Salvar checkpoint e testar
+
+## Fase 22: Painel de Viagem como Dashboard da Equipe
+
+- [x] Criar DashboardViagem como página inicial da equipe (não-admin) baseada no PainelViagem
+- [x] Adicionar botões de direção funcional (Waze) para hotel e cliente no PainelViagem
+- [x] Tornar checklists de ferramentas e carro exclusivos da equipe (esconder para admin)
+- [x] Atualizar App.tsx: admin → Dashboard atual, equipe → DashboardViagem
+- [x] Salvar checkpoint e testar
