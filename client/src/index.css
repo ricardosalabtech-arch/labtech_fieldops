@@ -43,12 +43,12 @@
 }
 
 :root {
-  /* SA Labtech — paleta moderna slate + indigo com acentos teal */
-  --primary: oklch(0.52 0.21 264);
-  --primary-foreground: oklch(0.98 0.01 264);
-  --sidebar-primary: oklch(0.58 0.20 264);
-  --sidebar-primary-foreground: oklch(0.98 0.01 264);
-  --chart-1: oklch(0.58 0.20 264);
+  /* SA Labtech — paleta azul corporativo #1580D0 */
+  --primary: oklch(0.62 0.18 248);
+  --primary-foreground: oklch(0.98 0.01 248);
+  --sidebar-primary: oklch(0.62 0.18 248);
+  --sidebar-primary-foreground: oklch(0.98 0.01 248);
+  --chart-1: oklch(0.62 0.18 248);
   --chart-2: oklch(0.68 0.16 200);
   --chart-3: oklch(0.70 0.18 160);
   --chart-4: oklch(0.75 0.15 85);
@@ -70,14 +70,14 @@
   --destructive-foreground: oklch(0.98 0 0);
   --border: oklch(0.91 0.004 240);
   --input: oklch(0.93 0.004 240);
-  --ring: oklch(0.52 0.21 264);
-  /* Sidebar moderno — azul claro com degradê */
-  --sidebar: oklch(0.62 0.12 255);
-  --sidebar-foreground: oklch(0.98 0.01 250);
-  --sidebar-accent: oklch(0.55 0.10 250);
-  --sidebar-accent-foreground: oklch(0.98 0.01 250);
-  --sidebar-border: oklch(0.55 0.08 250);
-  --sidebar-ring: oklch(0.45 0.15 264);
+  --ring: oklch(0.62 0.18 248);
+  /* Sidebar moderno — azul corporativo com degradê */
+  --sidebar: oklch(0.58 0.16 248);
+  --sidebar-foreground: oklch(0.98 0.01 248);
+  --sidebar-accent: oklch(0.52 0.14 248);
+  --sidebar-accent-foreground: oklch(0.98 0.01 248);
+  --sidebar-border: oklch(0.52 0.12 248);
+  --sidebar-ring: oklch(0.62 0.18 248);
 }
 
 .dark {
@@ -237,5 +237,5 @@
 
 /* Gradiente sutil para o header do sidebar */
 .sidebar-gradient {
-  background: linear-gradient(180deg, oklch(0.62 0.12 255) 0%, oklch(0.52 0.10 250) 100%);
+  background: linear-gradient(180deg, oklch(0.58 0.16 248) 0%, oklch(0.48 0.14 248) 100%);
 }

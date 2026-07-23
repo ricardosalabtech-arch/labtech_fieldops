@@ -177,11 +177,9 @@ function DashboardLayoutContent({
               </button>
               {!isCollapsed && (
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shadow-sm shrink-0">
-                    <span className="text-white font-bold text-[10px] tracking-tight">SA</span>
-                  </div>
+                  <img src="/manus-storage/LogoSaLABTECH_619f103b.png" alt="SA Labtech" className="h-8 w-auto shrink-0 object-contain drop-shadow-sm" />
                   <div className="min-w-0">
-                    <span className="font-semibold text-[13px] text-white tracking-tight block leading-tight drop-shadow-sm">Labtech</span>
+                    <span className="font-semibold text-[13px] text-white tracking-tight block leading-tight drop-shadow-sm">SA Labtech</span>
                     <span className="text-[10px] text-white/70 font-medium tracking-wide leading-tight drop-shadow-sm">FieldOps</span>
                   </div>
                 </div>
