@@ -232,10 +232,10 @@
 
 ## Fase 26: Integração FieldOps ↔ salabtech.com + Migração Viagens para Agenda
 
-- [ ] Implementar endpoint GET /fieldops/visits no FieldOps (retorna visitas no formato esperado pelo salabtech.com)
-- [ ] Implementar endpoint PATCH /fieldops/visits/:id/status no FieldOps (recebe atualização de status do salabtech.com)
-- [ ] Autenticação via Bearer token (VITE_FRONTEND_FORGE_API_KEY)
-- [ ] Migrar funcionalidade completa de Viagens.tsx para aba Viagem da Agenda (CRUD, checklist, PainelViagem, hotel, voos)
-- [ ] Remover menu Viagens do DashboardLayout e rota /viagens do App.tsx
-- [ ] Atualizar links de "Nova Viagem" e "Próximos Voos" no Dashboard.tsx para /agendamentos?tab=viagem
-- [ ] Salvar checkpoint e testar
+- [x] Implementar endpoint GET /fieldops/visits no FieldOps (retorna visitas no formato esperado pelo salabtech.com)
+- [x] Implementar endpoint PATCH /fieldops/visits/:id/status no FieldOps (recebe atualização de status do salabtech.com)
+- [x] Autenticação via Bearer token (VITE_FRONTEND_FORGE_API_KEY)
+- [x] Migrar funcionalidade completa de Viagens.tsx para aba Viagem da Agenda (CRUD, checklist, PainelViagem, hotel, voos)
+- [x] Remover menu Viagens do DashboardLayout e rota /viagens do App.tsx
+- [x] Atualizar links de "Nova Viagem" e "Próximos Voos" no Dashboard.tsx para /agendamentos
+- [x] Salvar checkpoint e testar
