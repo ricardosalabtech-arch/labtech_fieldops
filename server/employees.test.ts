@@ -64,6 +64,7 @@ vi.mock("./db", () => ({
   getDocuments: vi.fn().mockResolvedValue([]),
   getVehicles: vi.fn().mockResolvedValue([]),
   getDrivers: vi.fn().mockResolvedValue([]),
+  getDriverByEmployeeId: vi.fn().mockResolvedValue(undefined),
   getExpenses: vi.fn().mockResolvedValue([]),
   getExpenseSummary: vi.fn().mockResolvedValue({ total: 0, approved: 0, pending: 0 }),
   getExpensesByEmployee: vi.fn().mockResolvedValue([]),
@@ -85,12 +86,10 @@ describe("employees router", () => {
     expect(result[0].name).toBe("João Silva");
   });
 
-  it("allows regular user to list employees", async () => {
+  it("rejects non-admin from listing employees (includes driver data)", async () => {
     const { ctx } = createUserContext();
     const caller = appRouter.createCaller(ctx);
-    const result = await caller.employees.list();
-    expect(result).toBeDefined();
-    expect(Array.isArray(result)).toBe(true);
+    await expect(caller.employees.list()).rejects.toThrow();
   });
 
   it("allows admin to create employee with new fields", async () => {

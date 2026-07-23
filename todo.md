@@ -169,3 +169,13 @@
 - [x] Sincronizar vinculação visita↔viagem no backend (ao criar/editar viagem, atualizar visits.tripId)
 - [x] Adicionar checklist de veículo e ferramentas para técnico na página Viagens
 - [x] Salvar checkpoint e testar
+
+## Fase 20: Página unificada de Cadastro (Clientes + Equipe)
+
+- [x] Criar página Cadastro.tsx com abas "Clientes" e "Equipe"
+- [x] Migrar formulário de Clientes para a aba Clientes (com busca e histórico)
+- [x] Migrar formulário de Equipe (Employees) para a aba Equipe com campos de condutores (CPF, CNH, tipo sanguíneo, endereço) exceto anexos
+- [x] Adicionar procedure no backend para buscar/criar/atualizar driver vinculado ao employee
+- [x] Atualizar menu: substituir "Clientes" por "Cadastro" e remover "Equipe" de Configurações
+- [x] Atualizar rotas em App.tsx
+- [x] Salvar checkpoint e testar

@@ -361,6 +361,13 @@ export async function getDrivers() {
   return db.select().from(drivers).orderBy(desc(drivers.createdAt));
 }
 
+export async function getDriverByEmployeeId(employeeId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(drivers).where(eq(drivers.employeeId, employeeId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 export async function createDriver(data: InsertDriver) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

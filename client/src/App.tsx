@@ -7,7 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import Agendamentos from "./pages/Agendamentos";
-import Clientes from "./pages/Clientes";
+import Cadastro from "@/pages/Cadastro";
 import Viagens from "./pages/Viagens";
 import Reservas from "./pages/Reservas";
 import Documentos from "./pages/Documentos";
@@ -24,7 +24,7 @@ function Router() {
             <Route path={"/dashboard"} component={Dashboard} />
             <Route path={"/viagens"} component={Viagens} />
             <Route path={"/agendamentos"} component={Agendamentos} />
-            <Route path={"/clientes"} component={Clientes} />
+            <Route path={"/cadastro"} component={Cadastro} />
             <Route path={"/reservas"} component={Reservas} />
             <Route path={"/documentos"} component={Documentos} />
             <Route path={"/custos"} component={Custos} />

@@ -127,8 +127,38 @@ export const appRouter = router({
 
   // ─── Employees ─────────────────────────────────────────────
   employees: router({
-    list: protectedProcedure.query(async () => {
-      return db.getEmployees();
+    list: adminProcedure.query(async () => {
+      const emps = await db.getEmployees();
+      // Buscar dados de condutor vinculados a cada funcionário
+      const result = await Promise.all(emps.map(async (e: any) => {
+        const driver = await db.getDriverByEmployeeId(e.id);
+        return { ...e, driver };
+      }));
+      return result;
+    }),
+    getDriver: protectedProcedure.input(z.object({ employeeId: z.number() })).query(async ({ input }) => {
+      return db.getDriverByEmployeeId(input.employeeId);
+    }),
+    upsertDriver: adminProcedure.input(z.object({
+      employeeId: z.number(),
+      fullName: z.string().min(1),
+      cpf: z.string().optional(),
+      cnhNumber: z.string().optional(),
+      cnhCategory: z.string().optional(),
+      cnhExpiry: z.number().optional(),
+      bloodType: z.string().optional(),
+      address: z.string().optional(),
+      email: z.string().email().optional(),
+      photoUrl: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      const existing = await db.getDriverByEmployeeId(input.employeeId);
+      const data: any = { ...input };
+      if (input.cnhExpiry) data.cnhExpiry = new Date(input.cnhExpiry);
+      if (existing) {
+        return db.updateDriver(existing.id, data);
+      } else {
+        return db.createDriver(data);
+      }
     }),
     create: adminProcedure.input(z.object({
       name: z.string().min(1),
