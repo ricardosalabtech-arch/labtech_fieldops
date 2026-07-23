@@ -244,4 +244,4 @@
 
 - [x] Reverter const.ts para usar window.location.origin como redirect_uri (seguindo spec oficial do Manus OAuth)
 - [x] Desativar HMR no Vite (hmr: false) para eliminar erro de WebSocket no preview
-- [ ] Salvar checkpoint e verificar funcionamento no preview e produção
+- [x] Salvar checkpoint e verificar funcionamento no preview e produção

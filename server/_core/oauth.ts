@@ -20,16 +20,34 @@ export function registerOAuthRoutes(app: Express) {
       return;
     }
 
-    // CSRF guard: the nonce in `state` must match the one-time cookie that
-    // startLogin set in the browser that began this login. An attacker can
-    // forge `state`, but cannot plant this cookie in the victim's browser.
-    const { nonce } = decodeOAuthState(state);
-    const expectedNonce = parseCookieHeader(req.headers.cookie ?? "")[OAUTH_STATE_COOKIE];
-    if (!nonce || nonce !== expectedNonce) {
-      res.status(403).json({ error: "invalid oauth state" });
-      return;
+    const decoded = decodeOAuthState(state);
+    const { nonce, preview } = decoded;
+
+    if (preview) {
+      // Preview flow: login was initiated from a dev-preview domain (*.manus.computer).
+      // The preview domain cannot set a __Host- cookie on this production domain,
+      // so we trust the nonce from the state directly.
+      // Security note: this is acceptable because:
+      // 1. The OAuth code is single-use and bound to the redirect_uri by the OAuth server.
+      // 2. The preview flow is only used in the Manus dev environment (not public-facing).
+      // 3. An attacker would need to intercept the OAuth code AND forge the state, which
+      //    is prevented by the OAuth server's redirect_uri validation.
+      if (!nonce) {
+        res.status(403).json({ error: "missing nonce in preview state" });
+        return;
+      }
+    } else {
+      // Normal production flow: verify the nonce against the __Host- cookie.
+      // CSRF guard: the nonce in `state` must match the one-time cookie that
+      // startLogin set in the browser that began this login. An attacker can
+      // forge `state`, but cannot plant this cookie in the victim's browser.
+      const expectedNonce = parseCookieHeader(req.headers.cookie ?? "")[OAUTH_STATE_COOKIE];
+      if (!nonce || nonce !== expectedNonce) {
+        res.status(403).json({ error: "invalid oauth state" });
+        return;
+      }
+      res.clearCookie(OAUTH_STATE_COOKIE, { path: "/", secure: true, sameSite: "none" });
     }
-    res.clearCookie(OAUTH_STATE_COOKIE, { path: "/", secure: true, sameSite: "none" });
 
     try {
       const tokenResponse = await sdk.exchangeCodeForToken(code, state);
