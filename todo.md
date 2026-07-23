@@ -204,3 +204,28 @@
 - [x] Adicionar campo CEP no formulário de Cliente (Cadastro.tsx)
 - [x] Adicionar campo CEP no formulário de Equipe (Cadastro.tsx)
 - [x] Build e testes passando (35/35)
+
+## Fase 24: Agenda unificada (Visita + Viagem) e identificação por TAG
+
+- [x] Renomear "Agendamentos" para "Agenda" no menu e rotas
+- [x] Adicionar abas "Visita" e "Viagem" na página de Agenda
+- [x] Adicionar filtro de período e status no estilo pill buttons (já existe, manter)
+- [x] Adicionar filtro de período também para viagens na aba Viagem
+- [x] Alterar identificação de equipamento para TAG ou número de série apenas (remover campo equipmentName)
+- [x] Salvar checkpoint e testar
+
+## Fase 25: Painel do Funcionário Funcional + Agenda Unificada + TAG
+
+- [x] Renomear "Agendamentos" para "Agenda" no menu e rotas
+- [x] Adicionar abas "Visita" e "Viagem" na página de Agenda
+- [x] Adicionar filtro de período para viagens na aba Viagem
+- [x] Alterar identificação de equipamento para TAG ou número de série (remover equipmentName)
+- [x] DashboardViagem: Card "Minha Agenda do Dia" com visitas/viagens de hoje + botão Waze
+- [x] DashboardViagem: Botões de ação rápida (Iniciar Viagem, Cheguei no Cliente, Finalizar Visita, Finalizar Viagem)
+- [x] DashboardViagem: Alerta de checklist pendente com botão direto para preencher
+- [x] DashboardViagem: Lançamento rápido de despesas (combustível, pedágio, alimentação)
+- [x] DashboardViagem: Resumo de custos da viagem atual (total acumulado)
+- [x] DashboardViagem: Avisos/Notificações (nova viagem, documento disponível, aprovação pendente)
+- [x] DashboardViagem: Atalhos rápidos para Documentos, Reservas e Custos
+- [x] Backend: procedures para iniciar/finalizar viagem, registrar chegada, despesas rápidas
+- [x] Salvar checkpoint e testar

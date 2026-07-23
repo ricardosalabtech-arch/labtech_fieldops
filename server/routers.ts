@@ -397,6 +397,13 @@ export const appRouter = router({
       await db.deleteTrip(input.id);
       return { success: true };
     }),
+    updateStatus: protectedProcedure.input(z.object({
+      id: z.number(),
+      status: z.enum(["planejada", "em_andamento", "concluida", "cancelada"]),
+    })).mutation(async ({ input, ctx }) => {
+      await db.createAuditLog({ entity: "trip", entityId: input.id, action: "status_update", changedBy: ctx.user.name, changes: JSON.stringify({ status: input.status }) });
+      return db.updateTrip(input.id, { status: input.status } as any);
+    }),
   }),
 
   // ─── Hotel Reservations ────────────────────────────────────
@@ -616,7 +623,7 @@ export const appRouter = router({
       visitId: z.number().optional(),
       employeeId: z.number().optional(),
       employeeName: z.string().optional(),
-      category: z.enum(["transporte", "hospedagem", "alimentacao", "outros"]),
+      category: z.enum(["transporte", "hospedagem", "alimentacao", "combustivel", "pedagio", "outros"]),
       description: z.string().optional(),
       amount: z.string(),
       status: z.enum(["pendente", "aprovado", "rejeitado"]).default("pendente"),
@@ -628,7 +635,7 @@ export const appRouter = router({
     update: protectedProcedure.input(z.object({
       id: z.number(),
       status: z.enum(["pendente", "aprovado", "rejeitado"]).optional(),
-      category: z.enum(["transporte", "hospedagem", "alimentacao", "outros"]).optional(),
+      category: z.enum(["transporte", "hospedagem", "alimentacao", "combustivel", "pedagio", "outros"]).optional(),
       description: z.string().optional(),
       amount: z.string().optional(),
     })).mutation(async ({ input, ctx }) => {
@@ -753,7 +760,7 @@ export const appRouter = router({
     }),
     create: protectedProcedure.input(z.object({
       visitId: z.number(),
-      equipmentName: z.string().min(1),
+      tag: z.string().optional(),
       serialNumber: z.string().optional(),
       quantity: z.number().default(1),
       status: z.enum(["levado", "devolvido", "permaneceu"]).default("levado"),
@@ -763,7 +770,7 @@ export const appRouter = router({
     }),
     update: protectedProcedure.input(z.object({
       id: z.number(),
-      equipmentName: z.string().optional(),
+      tag: z.string().optional(),
       serialNumber: z.string().optional(),
       quantity: z.number().optional(),
       status: z.enum(["levado", "devolvido", "permaneceu"]).optional(),

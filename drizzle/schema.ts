@@ -195,7 +195,7 @@ export const expenses = mysqlTable("expenses", {
   visitId: int("visitId"),
   employeeId: int("employeeId"),
   employeeName: varchar("employeeName", { length: 255 }),
-  category: mysqlEnum("category", ["transporte", "hospedagem", "alimentacao", "outros"]).notNull(),
+  category: mysqlEnum("category", ["transporte", "hospedagem", "alimentacao", "combustivel", "pedagio", "outros"]).notNull(),
   description: varchar("description", { length: 255 }),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   status: mysqlEnum("status", ["pendente", "aprovado", "rejeitado"]).default("pendente").notNull(),
@@ -258,7 +258,7 @@ export type InsertChecklist = typeof checklists.$inferInsert;
 export const visitEquipment = mysqlTable("visitEquipment", {
   id: int("id").autoincrement().primaryKey(),
   visitId: int("visitId").notNull(),
-  equipmentName: varchar("equipmentName", { length: 255 }).notNull(),
+  tag: varchar("tag", { length: 100 }),
   serialNumber: varchar("serialNumber", { length: 100 }),
   quantity: int("quantity").default(1).notNull(),
   status: mysqlEnum("status", ["levado", "devolvido", "permaneceu"]).default("levado").notNull(),

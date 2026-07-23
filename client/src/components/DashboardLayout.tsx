@@ -36,7 +36,7 @@ import { Button } from "./ui/button";
 
 const allMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", roles: ["admin", "tecnico", "especialista", "user"], section: "principal" },
-  { icon: Calendar, label: "Agendamentos", path: "/agendamentos", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
+  { icon: Calendar, label: "Agenda", path: "/agendamentos", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
   { icon: Car, label: "Viagens", path: "/viagens", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
   { icon: BedDouble, label: "Reserva de Hotel e Passagens", path: "/reservas", roles: ["admin", "tecnico", "especialista", "user"], section: "operacional" },
   { icon: Building2, label: "Cadastro", path: "/cadastro", roles: ["admin"], section: "operacional" },

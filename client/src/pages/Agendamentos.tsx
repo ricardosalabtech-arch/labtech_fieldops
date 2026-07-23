@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, MapPin, Clock, User, Bell, FileCheck, Paperclip, ListChecks, Wrench, Plus, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, MapPin, Clock, User, Bell, FileCheck, Paperclip, ListChecks, Wrench, Plus, Trash2, Car } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import EmptyState from "@/components/EmptyState";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
@@ -35,6 +36,8 @@ export default function Agendamentos() {
   const [view, setView] = useState<"month" | "week" | "kanban">("month");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterPeriod, setFilterPeriod] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<string>("visita");
+  const [tripPeriod, setTripPeriod] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingVisit, setEditingVisit] = useState<any>(null);
@@ -57,7 +60,7 @@ export default function Agendamentos() {
   const updateEquipment = trpc.visitEquipment.update.useMutation({ onSuccess: () => utils.visitEquipment.invalidate() });
   const deleteEquipment = trpc.visitEquipment.delete.useMutation({ onSuccess: () => utils.visitEquipment.invalidate() });
   const [newChecklistTitle, setNewChecklistTitle] = useState("");
-  const [newEquipName, setNewEquipName] = useState("");
+  const [newEquipTag, setNewEquipTag] = useState("");
   const [newEquipSerial, setNewEquipSerial] = useState("");
   const [newEquipQty, setNewEquipQty] = useState(1);
 
@@ -79,15 +82,15 @@ export default function Agendamentos() {
   };
 
   const handleAddEquipment = () => {
-    if (!editingVisit || !newEquipName.trim()) return;
+    if (!editingVisit || (!newEquipTag.trim() && !newEquipSerial.trim())) return;
     createEquipment.mutate({
       visitId: editingVisit.id,
-      equipmentName: newEquipName,
+      tag: newEquipTag || undefined,
       serialNumber: newEquipSerial || undefined,
       quantity: newEquipQty,
       status: "levado",
     });
-    setNewEquipName("");
+    setNewEquipTag("");
     setNewEquipSerial("");
     setNewEquipQty(1);
     toast.success("Equipamento adicionado");
@@ -233,6 +236,28 @@ export default function Agendamentos() {
 
   const visitsForDay = (day: Date) => filteredVisits.filter(v => isSameDay(new Date(v.visitDate), day));
 
+  const filteredTrips = useMemo(() => {
+    if (!trips) return [];
+    return trips.filter(t => {
+      if (tripPeriod === "today") return isSameDay(new Date(t.departureDate), new Date());
+      if (tripPeriod === "week") {
+        const ws = startOfWeek(new Date(), { weekStartsOn: 0 });
+        const we = endOfWeek(new Date(), { weekStartsOn: 0 });
+        const td = new Date(t.departureDate);
+        return td >= ws && td <= we;
+      }
+      if (tripPeriod === "month") return isSameMonth(new Date(t.departureDate), new Date());
+      return true;
+    });
+  }, [trips, tripPeriod]);
+
+  const tripPeriodFilters = [
+    { label: "Todos os períodos", value: "all" },
+    { label: "Hoje", value: "today" },
+    { label: "Esta semana", value: "week" },
+    { label: "Este mês", value: "month" },
+  ];
+
   const periodFilters = [
     { label: "Todos os períodos", value: "all" },
     { label: "Hoje", value: "today" },
@@ -252,16 +277,26 @@ export default function Agendamentos() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[oklch(0.22_0.02_250)]">Agendamentos</h1>
-          <p className="text-sm text-muted-foreground">{filteredVisits.length} visita(s)</p>
+          <h1 className="text-2xl font-bold tracking-tight text-[oklch(0.22_0.02_250)]">Agenda</h1>
+          <p className="text-sm text-muted-foreground">
+            {activeTab === "visita" ? `${filteredVisits.length} visita(s)` : `${filteredTrips.length} viagem(s)`}
+          </p>
         </div>
-        {isAdmin && (
+        {isAdmin && activeTab === "visita" && (
           <Button onClick={() => openNewVisit()} className="gap-2 rounded-lg">
             <Plus className="h-4 w-4" /> Nova Visita
           </Button>
         )}
       </div>
 
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="visita">Visita</TabsTrigger>
+          <TabsTrigger value="viagem">Viagem</TabsTrigger>
+        </TabsList>
+
+        {/* ===== ABA VISITA ===== */}
+        <TabsContent value="visita" className="space-y-4">
       {/* Filtros */}
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">
@@ -485,6 +520,81 @@ export default function Agendamentos() {
         </Card>
       )}
 
+        </TabsContent>
+
+        {/* ===== ABA VIAGEM ===== */}
+        <TabsContent value="viagem" className="space-y-4">
+          {/* Filtros de período para viagens */}
+          <div className="flex flex-wrap gap-2">
+            {tripPeriodFilters.map(f => (
+              <button
+                key={f.value}
+                onClick={() => setTripPeriod(f.value)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  tripPeriod === f.value
+                    ? "bg-[oklch(0.48_0.18_250)] text-white shadow-sm"
+                    : "bg-white border border-border text-muted-foreground hover:bg-muted/50"
+              }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {filteredTrips.length === 0 ? (
+            <EmptyState
+              icon={Car}
+              title="Nenhuma viagem encontrada"
+              description="As viagens aparecerão aqui quando forem criadas."
+            />
+          ) : (
+            <div className="space-y-3">
+              {filteredTrips.map(t => (
+                <Card key={t.id} className="border-0 shadow-sm">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{t.returnAddress || t.vehicleInfo || `Viagem #${t.id}`}</div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <CalendarIcon className="h-3 w-3" />
+                            {format(new Date(t.departureDate), "dd/MM/yyyy")}
+                          </span>
+                          {t.returnDate && (
+                            <span className="flex items-center gap-1">
+                              <ChevronRight className="h-3 w-3" />
+                              {format(new Date(t.returnDate), "dd/MM/yyyy")}
+                            </span>
+                          )}
+                          {t.employeeName && (
+                            <span className="flex items-center gap-1">
+                              <User className="h-3 w-3" />{t.employeeName}
+                            </span>
+                          )}
+                          {t.transportMode && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted/60 text-muted-foreground capitalize">
+                              {t.transportMode.replace(/_/g, " ")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                        t.status === "planejada" ? "bg-blue-100 text-blue-700" :
+                        t.status === "em_andamento" ? "bg-orange-100 text-orange-700" :
+                        t.status === "concluida" ? "bg-green-100 text-green-700" :
+                        "bg-muted/60 text-muted-foreground"
+                      }`}>
+                        {t.status?.replace(/_/g, " ")}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
       {/* Dialog Nova/Editar Visita */}
       <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -663,17 +773,16 @@ export default function Agendamentos() {
                 <span className="text-sm font-medium">Equipamentos da Visita</span>
               </div>
               <div className="grid grid-cols-12 gap-2 mb-2">
-                <Input value={newEquipName} onChange={e => setNewEquipName(e.target.value)} placeholder="Equipamento" className="col-span-5" />
+                <Input value={newEquipTag} onChange={e => setNewEquipTag(e.target.value)} placeholder="TAG" className="col-span-5" />
                 <Input value={newEquipSerial} onChange={e => setNewEquipSerial(e.target.value)} placeholder="Nº Série" className="col-span-4" />
                 <Input type="number" value={newEquipQty} onChange={e => setNewEquipQty(parseInt(e.target.value) || 1)} className="col-span-2" min={1} />
-                <Button size="sm" variant="outline" className="col-span-1" onClick={handleAddEquipment} disabled={!newEquipName.trim()}><Plus className="h-4 w-4" /></Button>
+                <Button size="sm" variant="outline" className="col-span-1" onClick={handleAddEquipment} disabled={!newEquipTag.trim() && !newEquipSerial.trim()}><Plus className="h-4 w-4" /></Button>
               </div>
               {visitEquipments && visitEquipments.length > 0 ? (
                 <div className="space-y-1.5">
                   {visitEquipments.map((eq: any) => (
                     <div key={eq.id} className="flex items-center gap-2 rounded-lg border px-3 py-2">
-                      <span className="text-sm font-medium flex-1">{eq.equipmentName}</span>
-                      {eq.serialNumber && <span className="text-xs text-muted-foreground">S/N: {eq.serialNumber}</span>}
+                      <span className="text-sm font-medium flex-1">{eq.tag ? `TAG: ${eq.tag}` : ''}{eq.tag && eq.serialNumber ? ' · ' : ''}{eq.serialNumber ? `S/N: ${eq.serialNumber}` : ''}</span>
                       <span className="text-xs text-muted-foreground">Qtd: {eq.quantity}</span>
                       <Select value={eq.status} onValueChange={(v) => updateEquipment.mutate({ id: eq.id, status: v as any })}>
                         <SelectTrigger className="w-28 h-7 text-xs"><SelectValue /></SelectTrigger>
