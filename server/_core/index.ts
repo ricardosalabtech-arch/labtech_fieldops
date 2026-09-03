@@ -9,7 +9,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import * as db from "../db";
-import { pushVisitToSalabtech } from "../sync";
+import { pushVisitToPortal, pushVisitToSalabtech } from "../sync";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -139,8 +139,8 @@ async function startServer() {
       let errors = 0;
       for (const visit of activeVisits) {
         try {
-          const result = await pushVisitToSalabtech(visit);
-          if (result.success) pushed++;
+          const [serviceResult, portalResult] = await Promise.all([pushVisitToSalabtech(visit), pushVisitToPortal(visit)]);
+          if (serviceResult.success && portalResult.success) pushed++;
           else errors++;
         } catch {
           errors++;

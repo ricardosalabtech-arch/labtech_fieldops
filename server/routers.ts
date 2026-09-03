@@ -8,7 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
 import { storagePut } from "./storage";
-import { pushVisitToSalabtech, pushStatusToSalabtech, getSyncHistory } from "./sync";
+import { pushVisitToPortal, pushVisitToSalabtech, pushStatusToSalabtech, getSyncHistory } from "./sync";
 import { createHeartbeatJob, updateHeartbeatJob, listHeartbeatJobs } from "./_core/heartbeat";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -866,20 +866,20 @@ export const appRouter = router({
       }
     }),
     pushAll: adminProcedure.mutation(async () => {
-      // Push all visits to salabtech.com (manual full sync)
+      // Push active visits to both the App de Serviços and the isolated Portal Agenda.
       const allVisits = await db.getVisits();
       const results: any[] = [];
       for (const visit of allVisits) {
         if (visit.status === "agendado" || visit.status === "em_andamento") {
           try {
-            const result = await pushVisitToSalabtech(visit);
-            results.push({ visitId: visit.id, ...result });
+            const [serviceResult, portalResult] = await Promise.all([pushVisitToSalabtech(visit), pushVisitToPortal(visit)]);
+            results.push({ visitId: visit.id, service: serviceResult, portal: portalResult, success: serviceResult.success && portalResult.success });
           } catch (e: any) {
             results.push({ visitId: visit.id, success: false, error: String(e?.message || e) });
           }
         }
       }
-      return { total: allVisits.length, pushed: results.filter(r => r.success).length, results };
+      return { total: allVisits.length, pushed: results.filter(r => r.success).length, portalPushed: results.filter(r => r.portal?.success).length, results };
     }),
   }),
 });

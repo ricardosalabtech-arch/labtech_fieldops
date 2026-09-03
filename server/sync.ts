@@ -14,11 +14,101 @@ import * as db from "./db";
 
 // URL do salabtech.com (app de serviço)
 const SALABTECH_URL = "https://www.salabtech.com";
+const PORTAL_VISITS_URL = process.env.PORTAL_FIELD_INTEGRATION_URL || "https://salabportal-f7lzvyia.manus.space/api/integrations/field-app/visits";
 
 // Token de autenticação para o webhook do salabtech.com
 // Usa a mesma chave BUILT_IN_FORGE_API_KEY que já é compartilhada entre os apps
 function getSyncToken(): string {
   return process.env.BUILT_IN_FORGE_API_KEY || process.env.VITE_FRONTEND_FORGE_API_KEY || "";
+}
+
+function getPortalWebhookSecret(): string {
+  return process.env.FIELD_APP_WEBHOOK_SECRET || "";
+}
+
+function mapVisitStatusToPortal(status: string): string {
+  const map: Record<string, string> = {
+    agendado: "scheduled",
+    em_andamento: "in_progress",
+    concluido: "completed",
+    cancelado: "cancelled",
+  };
+  return map[status] || "scheduled";
+}
+
+function mapVisitTypeToPortal(visitType: string): string {
+  const map: Record<string, string> = {
+    manutencao_preventiva: "maintenance",
+    manutencao_corretiva: "maintenance",
+    consultoria: "consulting",
+    treinamento: "training",
+  };
+  return map[visitType] || "maintenance";
+}
+
+/**
+ * Envia a visita diretamente ao Portal do Cliente. O vínculo é determinado
+ * exclusivamente pelo CNPJ e, quando disponível, pela referência técnica do equipamento.
+ */
+export async function pushVisitToPortal(visit: any): Promise<{ success: boolean; visitId?: string; error?: string }> {
+  const webhookSecret = getPortalWebhookSecret();
+  if (!webhookSecret) {
+    return { success: false, error: "FIELD_APP_WEBHOOK_SECRET não configurado" };
+  }
+
+  const client = visit.clientId ? await db.getClientById(visit.clientId) : null;
+  const clientCnpj = String(client?.cnpj || "").replace(/\D/g, "");
+  if (!clientCnpj) {
+    const error = "Visita sem CNPJ do cliente; não enviada ao Portal.";
+    await db.createSyncLog({ visitId: visit.id, direction: "push", action: "portal_visit", status: "error", payload: JSON.stringify({ externalVisitId: `FIELDOPS-${visit.id}` }), errorMessage: error });
+    return { success: false, error };
+  }
+
+  let equipmentTag: string | undefined;
+  try {
+    const visitEquipment = await db.getVisitEquipment(visit.id);
+    equipmentTag = visitEquipment?.find((item: any) => item.tag)?.tag || undefined;
+  } catch {
+    equipmentTag = undefined;
+  }
+
+  const payload = {
+    externalVisitId: `FIELDOPS-${visit.id}`,
+    clientCnpj,
+    clientName: client?.companyName || visit.clientName,
+    equipmentTag,
+    title: visit.description || `Visita ${visit.visitType || "técnica"}`,
+    description: visit.description || undefined,
+    scheduledDate: visit.visitDate ? new Date(visit.visitDate).toISOString() : undefined,
+    endDate: visit.endDate ? new Date(visit.endDate).toISOString() : undefined,
+    technicianName: visit.employeeName || undefined,
+    transportMode: visit.transportMode || undefined,
+    status: mapVisitStatusToPortal(visit.status),
+    visitType: mapVisitTypeToPortal(visit.visitType),
+  };
+
+  try {
+    const response = await fetch(PORTAL_VISITS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-field-webhook-secret": webhookSecret,
+      },
+      body: JSON.stringify(payload),
+    });
+    const data: any = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = data.error || `HTTP ${response.status}`;
+      await db.createSyncLog({ visitId: visit.id, direction: "push", action: "portal_visit", status: "error", payload: JSON.stringify(payload), errorMessage: error });
+      return { success: false, error };
+    }
+    await db.createSyncLog({ visitId: visit.id, direction: "push", action: "portal_visit", status: "success", payload: JSON.stringify(payload), response: JSON.stringify(data) });
+    return { success: true, visitId: data.visitId };
+  } catch (error: any) {
+    const message = String(error?.message || error);
+    await db.createSyncLog({ visitId: visit.id, direction: "push", action: "portal_visit", status: "error", payload: JSON.stringify(payload), errorMessage: message });
+    return { success: false, error: message };
+  }
 }
 
 /**
