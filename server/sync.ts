@@ -48,7 +48,7 @@ function mapVisitTypeToPortal(visitType: string): string {
 
 /**
  * Envia a visita diretamente ao Portal do Cliente. O vínculo é determinado
- * exclusivamente pelo CNPJ e, quando disponível, pela referência técnica do equipamento.
+ * exclusivamente pelo CNPJ do cliente. Equipamento não participa do vínculo de visitas.
  */
 export async function pushVisitToPortal(visit: any): Promise<{ success: boolean; visitId?: string; error?: string }> {
   const webhookSecret = getPortalWebhookSecret();
@@ -64,19 +64,10 @@ export async function pushVisitToPortal(visit: any): Promise<{ success: boolean;
     return { success: false, error };
   }
 
-  let equipmentTag: string | undefined;
-  try {
-    const visitEquipment = await db.getVisitEquipment(visit.id);
-    equipmentTag = visitEquipment?.find((item: any) => item.tag)?.tag || undefined;
-  } catch {
-    equipmentTag = undefined;
-  }
-
   const payload = {
     externalVisitId: `FIELDOPS-${visit.id}`,
     clientCnpj,
     clientName: client?.companyName || visit.clientName,
-    equipmentTag,
     title: visit.description || `Visita ${visit.visitType || "técnica"}`,
     description: visit.description || undefined,
     scheduledDate: visit.visitDate ? new Date(visit.visitDate).toISOString() : undefined,
